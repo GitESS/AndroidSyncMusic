@@ -58,6 +58,7 @@ import com.ford.syncV4.proxy.rpc.PerformInteractionResponse;
 import com.ford.syncV4.proxy.rpc.PutFileResponse;
 import com.ford.syncV4.proxy.rpc.ReadDIDResponse;
 import com.ford.syncV4.proxy.rpc.ResetGlobalPropertiesResponse;
+import com.ford.syncV4.proxy.rpc.ScrollableMessage;
 import com.ford.syncV4.proxy.rpc.ScrollableMessageResponse;
 import com.ford.syncV4.proxy.rpc.SetAppIconResponse;
 import com.ford.syncV4.proxy.rpc.SetDisplayLayoutResponse;
@@ -105,7 +106,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	private Integer choiceSetId = 1020;
 	private Integer interactionChoiceSetID = 1030;
 	private int lastIndexOfSongChoiceId;
-	private SoftButton next, previous, forward, backward, appInfo, applinkInfo,	cmdInfo;
+	private SoftButton next, previous, forward, backward, appInfo, applinkInfo,	cmdInfo, scrollableMsg;
 	
 	public int getLastIndexOfSongChoiceId() {
 		return lastIndexOfSongChoiceId;
@@ -721,6 +722,19 @@ public class ProxyService extends Service implements IProxyListenerALM {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+				} else if(notification.getCustomButtonName().equals(107)){
+					String scrollableMessageBody = new String("This is a scrollable Message. Obiviously this Text is going to be long enough so that a user can experience the scroll in the SYNC Display. It's request to the user to not read this message!!!");
+					ScrollableMessage scrllMsg = new ScrollableMessage();
+					scrllMsg.setCorrelationID(nextCorrID());
+					scrllMsg.setTimeout(30000);
+					scrllMsg.setScrollableMessageBody(scrollableMessageBody);
+					
+					try {
+						_syncProxy.sendRPCRequest(scrllMsg);
+					} catch (SyncException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 	}
@@ -1224,6 +1238,12 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		cmdInfo.setType(SoftButtonType.SBT_TEXT);
 		cmdInfo.setSystemAction(SystemAction.DEFAULT_ACTION);
 		
+		scrollableMsg = new SoftButton();
+		scrollableMsg.setText("ScrollMsg");
+		scrollableMsg.setSoftButtonID(107);
+		scrollableMsg.setType(SoftButtonType.SBT_TEXT);
+		scrollableMsg.setSystemAction(SystemAction.DEFAULT_ACTION);
+		
 		
 		//Send Show RPC:
 		      Vector<SoftButton> buttons = new Vector<SoftButton>();
@@ -1234,6 +1254,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				buttons.add(appInfo);
 				buttons.add(applinkInfo);
 				buttons.add(cmdInfo);
+				buttons.add(scrollableMsg);
 				try {
 					_syncProxy.show("", "",
 							"", "", null, buttons, null,
