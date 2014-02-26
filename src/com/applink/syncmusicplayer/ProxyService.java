@@ -28,7 +28,6 @@ import com.ford.syncV4.proxy.interfaces.IProxyListenerALM;
 import com.ford.syncV4.proxy.rpc.AddCommandResponse;
 import com.ford.syncV4.proxy.rpc.AddSubMenuResponse;
 import com.ford.syncV4.proxy.rpc.Alert;
-import com.ford.syncV4.proxy.rpc.AlertManeuverResponse;
 import com.ford.syncV4.proxy.rpc.AlertResponse;
 import com.ford.syncV4.proxy.rpc.ChangeRegistrationResponse;
 import com.ford.syncV4.proxy.rpc.Choice;
@@ -51,7 +50,6 @@ import com.ford.syncV4.proxy.rpc.OnDriverDistraction;
 import com.ford.syncV4.proxy.rpc.OnHMIStatus;
 import com.ford.syncV4.proxy.rpc.OnLanguageChange;
 import com.ford.syncV4.proxy.rpc.OnPermissionsChange;
-import com.ford.syncV4.proxy.rpc.OnTBTClientState;
 import com.ford.syncV4.proxy.rpc.OnVehicleData;
 import com.ford.syncV4.proxy.rpc.PerformAudioPassThruResponse;
 import com.ford.syncV4.proxy.rpc.PerformInteractionResponse;
@@ -64,7 +62,6 @@ import com.ford.syncV4.proxy.rpc.SetAppIconResponse;
 import com.ford.syncV4.proxy.rpc.SetDisplayLayoutResponse;
 import com.ford.syncV4.proxy.rpc.SetGlobalPropertiesResponse;
 import com.ford.syncV4.proxy.rpc.SetMediaClockTimerResponse;
-import com.ford.syncV4.proxy.rpc.ShowConstantTBTResponse;
 import com.ford.syncV4.proxy.rpc.ShowResponse;
 import com.ford.syncV4.proxy.rpc.SliderResponse;
 import com.ford.syncV4.proxy.rpc.SoftButton;
@@ -75,7 +72,6 @@ import com.ford.syncV4.proxy.rpc.SubscribeVehicleDataResponse;
 import com.ford.syncV4.proxy.rpc.TTSChunk;
 import com.ford.syncV4.proxy.rpc.UnsubscribeButtonResponse;
 import com.ford.syncV4.proxy.rpc.UnsubscribeVehicleDataResponse;
-import com.ford.syncV4.proxy.rpc.UpdateTurnListResponse;
 import com.ford.syncV4.proxy.rpc.enums.ButtonName;
 import com.ford.syncV4.proxy.rpc.enums.InteractionMode;
 import com.ford.syncV4.proxy.rpc.enums.Language;
@@ -360,7 +356,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		switch(notification.getAudioStreamingState()) {
 		case AUDIBLE:
 			if (playingAudio) 
-				_mainInstance.playCurrentSong();
+				_mainInstance.playCurrentSong(0);
 			break;
 		case NOT_AUDIBLE:
 			_mainInstance.pauseCurrentSong();
@@ -822,11 +818,11 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		
 	}*/
 
-	@Override
+	/*@Override
 	public void onOnTBTClientState(OnTBTClientState arg0) {
 		// TODO Auto-generated method stub
 		
-	}
+	}*/
 	
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -922,8 +918,10 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		
 			Choice choice1 = new Choice();
 			choice1.setChoiceID(i);
-			choice1.setMenuName("Track Number" +i);
-			choice1.setVrCommands(new Vector<String>(Arrays.asList(new String[]{"Track "+i, songsList.get(i).get("songTitle")})));
+			//choice1.setMenuName("Track Number" +i);
+			//Displaying song title as Interaction choice set displayable
+			choice1.setMenuName(songsList.get(i).get("songTitle"));
+			choice1.setVrCommands(new Vector<String>(Arrays.asList(new String[]{songsList.get(i).get("songTitle"),"Track "+i})));
 			choiceVector.addElement(choice1);
 			
 		}
@@ -1054,12 +1052,12 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 
 	@Override
-	public void onAlertManeuverResponse(AlertManeuverResponse arg0) {
+	/*public void onAlertManeuverResponse(AlertManeuverResponse arg0) {
 		// TODO Auto-generated method stub
 		
-	}
+	}*/
 
-	@Override
+	//@Override
 	public void onChangeRegistrationResponse(ChangeRegistrationResponse arg0) {
 		// TODO Auto-generated method stub
 		
@@ -1155,11 +1153,11 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		
 	}
 
-	@Override
-	public void onShowConstantTBTResponse(ShowConstantTBTResponse arg0) {
+	//@Override
+	/*public void onShowConstantTBTResponse(ShowConstantTBTResponse arg0) {
 		// TODO Auto-generated method stub
 		
-	}
+	}*/
 
 	@Override
 	public void onSliderResponse(SliderResponse arg0) {
@@ -1180,11 +1178,11 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		
 	}
 
-	@Override
+	/*@Override
 	public void onUpdateTurnListResponse(UpdateTurnListResponse arg0) {
 		// TODO Auto-generated method stub
 		
-	}
+	}*/
 
 	private void showSoftButtonsOnScreen(){
 		/*Image playimage = new Image();

@@ -490,7 +490,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 				syncPlayer.start();
 				// Displaying Song title
 				String songTitle = songsList.get(songIndex).get("songTitle");
-				ProxyService.getProxyInstance().show(" Song Title :",	songTitle, TextAlignment.LEFT_ALIGNED, ProxyService.getInstance().nextCorrID());
+				ProxyService.getProxyInstance().show("Track No- :"+songIndex,	songTitle, TextAlignment.LEFT_ALIGNED, ProxyService.getInstance().nextCorrID());
 				songTitleLabel.setText(songTitle);
 
 				// Changing Button Image to pause image
