@@ -75,9 +75,11 @@ import com.ford.syncV4.proxy.rpc.UnsubscribeVehicleDataResponse;
 import com.ford.syncV4.proxy.rpc.enums.ButtonName;
 import com.ford.syncV4.proxy.rpc.enums.InteractionMode;
 import com.ford.syncV4.proxy.rpc.enums.Language;
+import com.ford.syncV4.proxy.rpc.enums.Result;
 import com.ford.syncV4.proxy.rpc.enums.SoftButtonType;
 import com.ford.syncV4.proxy.rpc.enums.SpeechCapabilities;
 import com.ford.syncV4.proxy.rpc.enums.SystemAction;
+import com.ford.syncV4.proxy.rpc.enums.TextAlignment;
 import com.ford.syncV4.transport.TCPTransportConfig;
 
 public class ProxyService extends Service implements IProxyListenerALM {
@@ -102,7 +104,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	private Integer choiceSetId = 1020;
 	private Integer interactionChoiceSetID = 1030;
 	private int lastIndexOfSongChoiceId;
-	private SoftButton next, previous, forward, backward, appInfo, applinkInfo,	cmdInfo, scrollableMsg;
+	private SoftButton next, previous, forward, backward, appInfo, applinkInfo,	cmdInfo, scrollableMsg, APTHCheck;
 	
 	public int getLastIndexOfSongChoiceId() {
 		return lastIndexOfSongChoiceId;
@@ -630,7 +632,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-				} else if (notification.getCustomButtonName().equals(102)) {
+				} /*else if (notification.getCustomButtonName().equals(102)) {
 					SyncMainActivity.getInstance().seekForwardCurrentPlayingSong();
 					Alert forward = new Alert();
 					forward.setAlertText1("Forward");
@@ -662,7 +664,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-				} else if (notification.getCustomButtonName().equals(104)) {
+				}*/ else if (notification.getCustomButtonName().equals(104)) {
 					Alert appInfo = new Alert();
 					appInfo.setAlertText1("Application Info");
 					appInfo.setDuration(3000);
@@ -731,6 +733,10 @@ public class ProxyService extends Service implements IProxyListenerALM {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+				} else if(notification.getCustomButtonName().equals(108)){
+					//PerformVoiceRecordingInteraction();
+					//new PerformAudioPassThruClass();
+					PerformAudioPassThruClass.getInstance(ProxyService.this).show();
 				}
 
 	}
@@ -981,7 +987,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		Vector<Integer> interactionChoiceSetIdList = new Vector<Integer>();
 		interactionChoiceSetIdList.addElement(1031);
 		RPCMessage req;
-		req = RPCRequestFactory.buildPerformInteraction(initChunks, "Track Number", interactionChoiceSetIdList, helpChunks, timeoutChunks, InteractionMode.VR_ONLY, 10000, nextCorrID());
+		req = RPCRequestFactory.buildPerformInteraction(initChunks, "Available Tracks", interactionChoiceSetIdList, helpChunks, timeoutChunks, InteractionMode.VR_ONLY, 10000, nextCorrID());
 		try {
 			_syncProxy.sendRPCRequest((RPCRequest) req);
 		} catch (SyncException e) {
@@ -1076,8 +1082,19 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 
 	@Override
-	public void onEndAudioPassThruResponse(EndAudioPassThruResponse arg0) {
+	public void onEndAudioPassThruResponse(EndAudioPassThruResponse response) {
 		// TODO Auto-generated method stub
+		
+		Log.i("EndAudioPassThru", "-"+response.toString());
+
+		final SyncMainActivity mainActivity = SyncMainActivity.getInstance();
+		final Result result = response.getResultCode();
+		mainActivity.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				RecordingAudio.getInstance().endAudioPassThruResponse(result);
+			}
+		});
 		
 	}
 
@@ -1100,8 +1117,17 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 
 	@Override
-	public void onOnAudioPassThru(OnAudioPassThru arg0) {
+	public void onOnAudioPassThru(OnAudioPassThru notification) {
 		// TODO Auto-generated method stub
+		Log.i("OnAudioPassThruNotif", "-"+notification.toString());
+
+		final byte[] aptData = notification.getAPTData();
+		SyncMainActivity.getInstance().runOnUiThread(new Runnable() {
+			@Override
+		public void run() {
+		RecordingAudio.getInstance().audioPassThru(aptData);
+			}
+		});
 		
 	}
 
@@ -1118,8 +1144,18 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 
 	@Override
-	public void onPerformAudioPassThruResponse(PerformAudioPassThruResponse arg0) {
+	public void onPerformAudioPassThruResponse(PerformAudioPassThruResponse response) {
 		// TODO Auto-generated method stub
+		Log.i("PerformAudioPassThru", "-"+response);
+
+		final Result result = response.getResultCode();
+		SyncMainActivity.getInstance().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				RecordingAudio.getInstance().performAudioPassThruResponse(
+						result);
+			}
+		});
 		
 	}
 
@@ -1205,7 +1241,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		previous.setType(SoftButtonType.SBT_TEXT);
 		previous.setSystemAction(SystemAction.DEFAULT_ACTION);
 		
-		forward = new SoftButton();
+		/*forward = new SoftButton();
 		forward.setText("Forward");
 		forward.setSoftButtonID(102);
 		forward.setType(SoftButtonType.SBT_TEXT);
@@ -1215,7 +1251,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		backward.setText("Backward");
 		backward.setSoftButtonID(103);
 		backward.setType(SoftButtonType.SBT_TEXT);
-		backward.setSystemAction(SystemAction.DEFAULT_ACTION);
+		backward.setSystemAction(SystemAction.DEFAULT_ACTION);*/
 		
 		//AppInfo
 		appInfo = new SoftButton();
@@ -1242,17 +1278,26 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		scrollableMsg.setType(SoftButtonType.SBT_TEXT);
 		scrollableMsg.setSystemAction(SystemAction.DEFAULT_ACTION);
 		
+		APTHCheck = new SoftButton();
+		APTHCheck.setText("Record");
+		APTHCheck.setSoftButtonID(108);
+		APTHCheck.setType(SoftButtonType.SBT_TEXT);
+		APTHCheck.setSystemAction(SystemAction.DEFAULT_ACTION);
+		
+		
+		
 		
 		//Send Show RPC:
 		      Vector<SoftButton> buttons = new Vector<SoftButton>();
 				buttons.add(next);
 				buttons.add(previous);
-				buttons.add(forward);
-				buttons.add(backward);
+				//buttons.add(forward);
+				//buttons.add(backward);
 				buttons.add(appInfo);
 				buttons.add(applinkInfo);
 				buttons.add(cmdInfo);
 				buttons.add(scrollableMsg);
+				buttons.add(APTHCheck);
 				try {
 					_syncProxy.show("", "",
 							"", "", null, buttons, null,
@@ -1287,6 +1332,23 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		lockscreenUP = false;
 	}
 	
-	
+	private void PerformVoiceRecordingInteraction(){
+		Alert alert = new Alert();
+		alert.setAlertText1("Voice Recording");
+		alert.setAlertText2("Start in 3 seconds");
+		alert.setDuration(3000);
+		alert.setCorrelationID(nextCorrID());
+		Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
+		ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
+				"Speak to SYNC microphone to record! "));
+		alert.setTtsChunks(ttsChunks);
+		try {
+			_syncProxy.sendRPCRequest(alert);
+		} catch (SyncException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 	
 }
