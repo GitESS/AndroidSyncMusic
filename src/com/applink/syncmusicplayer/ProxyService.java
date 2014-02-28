@@ -104,7 +104,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	private Integer choiceSetId = 1020;
 	private Integer interactionChoiceSetID = 1030;
 	private int lastIndexOfSongChoiceId;
-	private SoftButton next, previous, forward, backward, appInfo, applinkInfo,	cmdInfo, scrollableMsg, APTHCheck;
+	private SoftButton next, previous, appInfo, applinkInfo,	cmdInfo, scrollableMsg, APTHCheck, vehicleData;
 	
 	public int getLastIndexOfSongChoiceId() {
 		return lastIndexOfSongChoiceId;
@@ -562,13 +562,16 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
 				break;
 			case PRESET_0:
-				_mainInstance.playTrackNumber(0);
+				SubscribeVehicleDataClass.getInstance(ProxyService.this, 0).getVehicleData();
+				//_mainInstance.playTrackNumber(0);
 				break;
 			case PRESET_1:
-				_mainInstance.playTrackNumber(1);
+				SubscribeVehicleDataClass.getInstance(ProxyService.this, 1).getVehicleData();
+				//_mainInstance.playTrackNumber(1);
 				break;
 			case PRESET_2:
-				_mainInstance.playTrackNumber(2);
+				SubscribeVehicleDataClass.getInstance(ProxyService.this, 2).getVehicleData();
+				//_mainInstance.playTrackNumber(2);
 				break;
 			case PRESET_3:
 				_mainInstance.playTrackNumber(3);
@@ -737,6 +740,13 @@ public class ProxyService extends Service implements IProxyListenerALM {
 					//PerformVoiceRecordingInteraction();
 					//new PerformAudioPassThruClass();
 					PerformAudioPassThruClass.getInstance(ProxyService.this).show();
+				} else if(notification.getCustomButtonName().equals(109)){
+					try {
+						_syncProxy.show("Vehicle Data", "Coming Soon", TextAlignment.CENTERED, nextCorrID());
+					} catch (SyncException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 
 	}
@@ -1105,9 +1115,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 
 	@Override
-	public void onGetVehicleDataResponse(GetVehicleDataResponse arg0) {
+	public void onGetVehicleDataResponse(GetVehicleDataResponse response) {
 		// TODO Auto-generated method stub
-		
+		Log.i("onGetVehicleData", response.toString());
 	}
 
 	@Override
@@ -1202,15 +1212,17 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 
 	@Override
-	public void onSubscribeVehicleDataResponse(SubscribeVehicleDataResponse arg0) {
+	public void onSubscribeVehicleDataResponse(SubscribeVehicleDataResponse response) {
 		// TODO Auto-generated method stub
+		Log.i("onSubscribeVehicledata", response.toString());
 		
 	}
 
 	@Override
 	public void onUnsubscribeVehicleDataResponse(
-			UnsubscribeVehicleDataResponse arg0) {
+			UnsubscribeVehicleDataResponse response) {
 		// TODO Auto-generated method stub
+		Log.i("onUnSubscribeVehicledata", response.toString());
 		
 	}
 
@@ -1284,6 +1296,12 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		APTHCheck.setType(SoftButtonType.SBT_TEXT);
 		APTHCheck.setSystemAction(SystemAction.DEFAULT_ACTION);
 		
+		vehicleData = new SoftButton();
+		vehicleData.setText("Vehicle");
+		vehicleData.setSoftButtonID(109);
+		vehicleData.setType(SoftButtonType.SBT_TEXT);
+		vehicleData.setSystemAction(SystemAction.DEFAULT_ACTION);
+		
 		
 		
 		
@@ -1298,6 +1316,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				buttons.add(cmdInfo);
 				buttons.add(scrollableMsg);
 				buttons.add(APTHCheck);
+				buttons.add(vehicleData);
 				try {
 					_syncProxy.show("", "",
 							"", "", null, buttons, null,

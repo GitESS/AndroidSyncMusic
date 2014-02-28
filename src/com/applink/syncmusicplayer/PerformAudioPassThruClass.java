@@ -23,15 +23,7 @@ import com.ford.syncV4.proxy.rpc.enums.BitsPerSample;
 import com.ford.syncV4.proxy.rpc.enums.SamplingRate;
 
 public class PerformAudioPassThruClass {
-	//private String mCheckWavfileCheckBox = null;
-	//private String mCheckMuteAudioCheckBox = null;
-	private String mEditAudioPassThruDisplayText1 = "AudioPTT1";
-	private String mEditAudioPassThruDisplayText2 = "AudioPTT1";
-	private String mEditInitialPrompt = "Initial Prompt";
-	private String mEditMaxDuration = "10000";
-	private String mSpspnBitsPerSample = null;
-	private String mSpspnSamplingRate = null;
-
+	
 	private Context mContext = null;
 	private boolean bSaveWave;
 	LayoutInflater inflater = null;
