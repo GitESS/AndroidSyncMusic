@@ -45,9 +45,6 @@ public class RecordingAudio {
 		}
 
 		Log.i("app", "len =" + aptData.length + " count=" + iMByteCount);
-		//MainActivity.getInstance().addRecordMsg(
-		//		new RecordMessage("len =" + aptData.length + " count="
-			//			+ iMByteCount));
 		
 		iMByteCount = iMByteCount + aptData.length;
 		File audioOutFile = getAudioOutputFile(INT_PCM);

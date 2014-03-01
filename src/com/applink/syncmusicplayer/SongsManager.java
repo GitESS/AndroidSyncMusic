@@ -27,6 +27,7 @@ public class SongsManager {
 	        .getPath() + "/";
 	private ArrayList<HashMap<String, String>> songsList = new ArrayList<HashMap<String, String>>();
 	private String mp3Pattern = ".mp3";
+	private String wavPattern = ".wav";
 
 	// Constructor
 	public SongsManager() {
@@ -74,7 +75,7 @@ public class SongsManager {
 	}
 
 	private void addSongToList(File song) {
-	    if (song.getName().endsWith(mp3Pattern)) {
+	    if (song.getName().endsWith(mp3Pattern) || song.getName().endsWith(wavPattern)) {
 	        HashMap<String, String> songMap = new HashMap<String, String>();
 	        songMap.put("songTitle", song.getName().substring(0, (song.getName().length() - 4)));
 	        songMap.put("songPath", song.getPath());

@@ -63,6 +63,7 @@ import com.ford.syncV4.proxy.rpc.SetDisplayLayoutResponse;
 import com.ford.syncV4.proxy.rpc.SetGlobalPropertiesResponse;
 import com.ford.syncV4.proxy.rpc.SetMediaClockTimerResponse;
 import com.ford.syncV4.proxy.rpc.ShowResponse;
+import com.ford.syncV4.proxy.rpc.Slider;
 import com.ford.syncV4.proxy.rpc.SliderResponse;
 import com.ford.syncV4.proxy.rpc.SoftButton;
 import com.ford.syncV4.proxy.rpc.Speak;
@@ -741,12 +742,24 @@ public class ProxyService extends Service implements IProxyListenerALM {
 					//new PerformAudioPassThruClass();
 					PerformAudioPassThruClass.getInstance(ProxyService.this).show();
 				} else if(notification.getCustomButtonName().equals(109)){
+					Vector<String> str = new Vector<String>();
+					str.add("Footer");
+					Slider slider = new Slider();
+					slider.setCorrelationID(nextCorrID());
+					slider.setNumTicks(3);
+					slider.setPosition(3);
+					slider.setSliderHeader("SLider Test");
+					slider.setSliderFooter(str);
+					slider.setTimeout(5000);
+					
 					try {
-						_syncProxy.show("Vehicle Data", "Coming Soon", TextAlignment.CENTERED, nextCorrID());
+						_syncProxy.sendRPCRequest(slider);
+						_syncProxy.show("Slider", "Coming Soon", TextAlignment.CENTERED, nextCorrID());
 					} catch (SyncException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+					
 				}
 
 	}
@@ -1091,22 +1104,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		
 	}
 
-	@Override
-	public void onEndAudioPassThruResponse(EndAudioPassThruResponse response) {
-		// TODO Auto-generated method stub
-		
-		Log.i("EndAudioPassThru", "-"+response.toString());
-
-		final SyncMainActivity mainActivity = SyncMainActivity.getInstance();
-		final Result result = response.getResultCode();
-		mainActivity.runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				RecordingAudio.getInstance().endAudioPassThruResponse(result);
-			}
-		});
-		
-	}
+	
 
 	@Override
 	public void onGetDTCsResponse(GetDTCsResponse arg0) {
@@ -1140,19 +1138,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		});
 		
 	}
-
-	@Override
-	public void onOnLanguageChange(OnLanguageChange arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onOnVehicleData(OnVehicleData arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
+	
 	@Override
 	public void onPerformAudioPassThruResponse(PerformAudioPassThruResponse response) {
 		// TODO Auto-generated method stub
@@ -1168,6 +1154,37 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		});
 		
 	}
+	
+	@Override
+	public void onEndAudioPassThruResponse(EndAudioPassThruResponse response) {
+		// TODO Auto-generated method stub
+		
+		Log.i("EndAudioPassThru", "-"+response.toString());
+
+		final SyncMainActivity mainActivity = SyncMainActivity.getInstance();
+		final Result result = response.getResultCode();
+		mainActivity.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				RecordingAudio.getInstance().endAudioPassThruResponse(result);
+			}
+		});
+		
+	}
+
+	@Override
+	public void onOnLanguageChange(OnLanguageChange arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onOnVehicleData(OnVehicleData arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
 
 	@Override
 	public void onPutFileResponse(PutFileResponse arg0) {
@@ -1182,9 +1199,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 
 	@Override
-	public void onScrollableMessageResponse(ScrollableMessageResponse arg0) {
+	public void onScrollableMessageResponse(ScrollableMessageResponse scrollResponse) {
 		// TODO Auto-generated method stub
-		
+		Log.i("Scroll Response", ""+scrollResponse.toString());
 	}
 
 	@Override
@@ -1206,9 +1223,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}*/
 
 	@Override
-	public void onSliderResponse(SliderResponse arg0) {
+	public void onSliderResponse(SliderResponse sliderRes) {
 		// TODO Auto-generated method stub
-		
+		Log.i("Slider", ""+sliderRes);
 	}
 
 	@Override

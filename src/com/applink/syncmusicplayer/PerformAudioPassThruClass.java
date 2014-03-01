@@ -25,7 +25,6 @@ import com.ford.syncV4.proxy.rpc.enums.SamplingRate;
 public class PerformAudioPassThruClass {
 	
 	private Context mContext = null;
-	private boolean bSaveWave;
 	LayoutInflater inflater = null;
 	
 	public PerformAudioPassThruClass() {
@@ -45,15 +44,7 @@ public class PerformAudioPassThruClass {
 
 	
 	public void show() {
-		AlertDialog.Builder builder;
-		AlertDialog dlg;
-
-		//View layout = inflater.inflate(R.layout.performaudiopassthru, null);
-
-
-
 				
-				//ComData.getInstance().mbSaveWave = true;
 				Vector<TTSChunk> initChunks = TTSChunkFactory
 						.createSimpleTTSChunks("Initial prompt");
 				try {
@@ -73,11 +64,9 @@ public class PerformAudioPassThruClass {
 					RecordingAudio.getInstance().myBitsPerSample = 8;
 				
 
-					/*MainActivity.getInstance().addRecordMsg(
-							new RecordMessage(msg));*/
 					Log.i("PerformAudioPClass", msg.toString());
 					
-					ProxyService.getInstance().getInstance().getProxyInstance().sendRPCRequest(msg);
+					ProxyService.getInstance().getProxyInstance().sendRPCRequest(msg);
 				}catch (SyncException e) {
 				}
 	}
