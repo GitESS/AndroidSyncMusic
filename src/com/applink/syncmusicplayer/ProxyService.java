@@ -725,7 +725,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 						e.printStackTrace();
 					}
 				} else if(notification.getCustomButtonName().equals(107)){
-					String scrollableMessageBody = new String("This is a scrollable Message. Obiviously this Text is going to be long enough so that a user can experience the scroll in the SYNC Display. It's request to the user to not read this message!!!");
+					String scrollableMessageBody = new String("This is Applink enabled Application. This Player has Voice command. User can give voice command to operate this player. Available Voice commands are Play, Pause, Next, Previous, Backward and forwards");
 					ScrollableMessage scrllMsg = new ScrollableMessage();
 					scrllMsg.setCorrelationID(nextCorrID());
 					scrllMsg.setTimeout(30000);
@@ -743,9 +743,11 @@ public class ProxyService extends Service implements IProxyListenerALM {
 					PerformAudioPassThruClass.getInstance(ProxyService.this).show();
 				} else if(notification.getCustomButtonName().equals(109)){
 					Vector<String> str = new Vector<String>();
-					str.add("Footer");
+					str.add("Slider" );
+					str.add("Test");
+					str.add( "Footer");
 					Slider slider = new Slider();
-					slider.setCorrelationID(nextCorrID());
+					slider.setCorrelationID(5001);
 					slider.setNumTicks(3);
 					slider.setPosition(3);
 					slider.setSliderHeader("SLider Test");
@@ -1302,7 +1304,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		cmdInfo.setSystemAction(SystemAction.DEFAULT_ACTION);
 		
 		scrollableMsg = new SoftButton();
-		scrollableMsg.setText("ScrollMsg");
+		scrollableMsg.setText("Help");
 		scrollableMsg.setSoftButtonID(107);
 		scrollableMsg.setType(SoftButtonType.SBT_TEXT);
 		scrollableMsg.setSystemAction(SystemAction.DEFAULT_ACTION);
@@ -1368,7 +1370,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		lockscreenUP = false;
 	}
 	
-	private void PerformVoiceRecordingInteraction(){
+	/*private void PerformVoiceRecordingInteraction(){
 		Alert alert = new Alert();
 		alert.setAlertText1("Voice Recording");
 		alert.setAlertText2("Start in 3 seconds");
@@ -1385,6 +1387,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			e.printStackTrace();
 		}
 		
-	}
+	}*/
 	
 }
