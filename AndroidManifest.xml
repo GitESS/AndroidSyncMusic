@@ -19,9 +19,10 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppBaseTheme" >
         <activity
             android:name="com.applink.syncmusicplayer.SyncMainActivity"
+            android:screenOrientation="portrait"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -31,7 +32,7 @@
         </activity>
         <activity
             android:name="com.applink.syncmusicplayer.PlayListActivity" />
-        <activity android:name="com.applink.syncmusicplayer.LockScreenActivity"/>
+        <activity android:name="com.applink.syncmusicplayer.LockScreenActivity" android:screenOrientation="portrait"/>
         <service android:name=".ProxyService" >
         </service>
         <receiver android:name=".SyncReceiver" >

@@ -74,6 +74,7 @@ import com.ford.syncV4.proxy.rpc.TTSChunk;
 import com.ford.syncV4.proxy.rpc.UnsubscribeButtonResponse;
 import com.ford.syncV4.proxy.rpc.UnsubscribeVehicleDataResponse;
 import com.ford.syncV4.proxy.rpc.enums.ButtonName;
+import com.ford.syncV4.proxy.rpc.enums.DriverDistractionState;
 import com.ford.syncV4.proxy.rpc.enums.InteractionMode;
 import com.ford.syncV4.proxy.rpc.enums.Language;
 import com.ford.syncV4.proxy.rpc.enums.Result;
@@ -82,6 +83,7 @@ import com.ford.syncV4.proxy.rpc.enums.SpeechCapabilities;
 import com.ford.syncV4.proxy.rpc.enums.SystemAction;
 import com.ford.syncV4.proxy.rpc.enums.TextAlignment;
 import com.ford.syncV4.transport.TCPTransportConfig;
+import com.ford.syncV4.util.DebugTool;
 
 public class ProxyService extends Service implements IProxyListenerALM {
 	static final String TAG = "SyncMusciPlayer";
@@ -97,7 +99,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	private boolean lockscreenUP = false;
 	private boolean firstHMIStatusChange = true;
 	private static boolean waitingForResponse = false;
-	
+	private boolean driverdistrationNotif = false;
 	public int trackNumber = 1;
 	//Voice cmd implementation
 	private Integer autoIncCNDCorrId = 1001;
@@ -105,7 +107,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	private Integer choiceSetId = 1020;
 	private Integer interactionChoiceSetID = 1030;
 	private int lastIndexOfSongChoiceId;
-	private SoftButton next, previous, appInfo, applinkInfo,	cmdInfo, scrollableMsg, APTHCheck, vehicleData;
+	private SoftButton next, previous, appInfo, applinkInfo, cmdInfo, scrollableMsg, APTHCheck, vehicleData;
 	
 	public int getLastIndexOfSongChoiceId() {
 		return lastIndexOfSongChoiceId;
@@ -123,11 +125,11 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		// TODO Auto-generated method stub
 		super.onCreate();
 		Toast.makeText(getApplicationContext(), "Control is on OnCreate if Service is not created, Create it", Toast.LENGTH_SHORT).show();
-		IntentFilter mediaIntentFilter = new IntentFilter();
-		mediaIntentFilter.addAction(Intent.ACTION_MEDIA_BUTTON);
-		
-		mediaButtonReceiver = new SyncReceiver();
-		registerReceiver(mediaButtonReceiver, mediaIntentFilter);
+//		IntentFilter mediaIntentFilter = new IntentFilter();
+//		mediaIntentFilter.addAction(Intent.ACTION_MEDIA_BUTTON);
+//		
+//		mediaButtonReceiver = new SyncReceiver();
+//		registerReceiver(mediaButtonReceiver, mediaIntentFilter);
 	
 		Log.i(TAG, "ProxyService.onCreate()");
 		_instance = this;
@@ -137,9 +139,19 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.i(TAG, "ProxyService.onStartCommand()");
 		Toast.makeText(getApplicationContext(), "Control is on OnStartCommand", Toast.LENGTH_SHORT).show();
-		startProxyIfNetworkConnected();
-		
-        setCurrentActivity(SyncMainActivity.getInstance());
+//		startProxyIfNetworkConnected();
+//		
+//        setCurrentActivity(SyncMainActivity.getInstance());
+		mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+		if (mBtAdapter != null){
+			if (mBtAdapter.isEnabled()){
+				startProxy();
+			}
+		}
+	
+    if (SyncMainActivity.getInstance() != null) {
+    	setCurrentActivity(SyncMainActivity.getInstance());
+    }
 			
         return START_STICKY;
 		
@@ -170,26 +182,24 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		return interactionChoiceSetID;
 	}
 	
-	private void startProxyIfNetworkConnected(){
-		Log.i(TAG, "startProxyIfNetworkConnected()");
-		final SharedPreferences prefs = getSharedPreferences(Const.PREFS_NAME,
-				MODE_PRIVATE);
-		final int transportType = prefs.getInt(
-				Const.Transport.PREFS_KEY_TRANSPORT_TYPE,
-				Const.Transport.PREFS_DEFAULT_TRANSPORT_TYPE);
-
-		if (transportType == Const.Transport.KEY_BLUETOOTH) {
-			Log.d(TAG, "ProxyService. onStartCommand(). Transport = Bluetooth.");
-			mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-			if (mBtAdapter != null) {
-				if (mBtAdapter.isEnabled()) {
-					startProxy();
-				}
-			}
-		} else {
-			startProxy();
-		}
-	}
+//	public void startProxyIfNetworkConnected(){
+//		Log.i(TAG, "startProxyIfNetworkConnected()");
+//		final SharedPreferences prefs = getSharedPreferences(Const.PREFS_NAME,
+//				MODE_PRIVATE);
+//		final int transportType = prefs.getInt(Const.Transport.PREFS_KEY_TRANSPORT_TYPE, Const.Transport.PREFS_DEFAULT_TRANSPORT_TYPE);
+//
+//		if (transportType == Const.Transport.KEY_BLUETOOTH) {
+//			Log.d(TAG, "ProxyService. onStartCommand(). Transport = Bluetooth.");
+//			mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+//			if (mBtAdapter != null) {
+//				if (mBtAdapter.isEnabled()) {
+//					startProxy();
+//				}
+//			}
+//		} else {
+//			startProxy();
+//		}
+//	}
 	
 	public void startProxy(){
 		Log.i(TAG, "ProxyService.startProxy()");
@@ -206,25 +216,25 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				int transportType = settings.getInt(
 						Const.Transport.PREFS_KEY_TRANSPORT_TYPE,
 						Const.Transport.PREFS_DEFAULT_TRANSPORT_TYPE);
-				String ipAddress = settings.getString(
-						Const.Transport.PREFS_KEY_TRANSPORT_IP,
-						Const.Transport.PREFS_DEFAULT_TRANSPORT_IP);
-				int tcpPort = settings.getInt(
-						Const.Transport.PREFS_KEY_TRANSPORT_PORT,
-						Const.Transport.PREFS_DEFAULT_TRANSPORT_PORT);
-				boolean autoReconnect = settings
-						.getBoolean(
-								Const.Transport.PREFS_KEY_TRANSPORT_RECONNECT,
-								Const.Transport.PREFS_DEFAULT_TRANSPORT_RECONNECT_DEFAULT);
+//				String ipAddress = settings.getString(
+//						Const.Transport.PREFS_KEY_TRANSPORT_IP,
+//						Const.Transport.PREFS_DEFAULT_TRANSPORT_IP);
+//				int tcpPort = settings.getInt(
+//						Const.Transport.PREFS_KEY_TRANSPORT_PORT,
+//						Const.Transport.PREFS_DEFAULT_TRANSPORT_PORT);
+//				boolean autoReconnect = settings
+//						.getBoolean(
+//								Const.Transport.PREFS_KEY_TRANSPORT_RECONNECT,
+//								Const.Transport.PREFS_DEFAULT_TRANSPORT_RECONNECT_DEFAULT);
 
 				if (transportType == Const.Transport.KEY_BLUETOOTH) {
 					//_syncProxy = new SyncProxyALM(this, appName, isMediaApp);
 					_syncProxy = new SyncProxyALM(this, appName, isMediaApp, Language.EN_US, Language.EN_US, "584421907");
 					
-				} else {
+				} /*else {
 					//_syncProxy = new SyncProxyALM(this, appName, isMediaApp, new TCPTransportConfig(tcpPort, ipAddress, autoReconnect));
 					_syncProxy = new SyncProxyALM(this, appName, isMediaApp, Language.EN_US, Language.EN_US, "584421907", new TCPTransportConfig(tcpPort, ipAddress, autoReconnect));
-				}
+				}*/
 			} catch (SyncException e) {
 				e.printStackTrace();
 				//error creating proxy, returned proxy = null
@@ -244,8 +254,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		disposeSyncProxy();
 		clearlockscreen();
 		_instance = null;
-		if (_mainInstance.syncPlayer != null) _mainInstance.syncPlayer.release();		
-		unregisterReceiver(mediaButtonReceiver);	
+		if (_mainInstance.syncPlayer != null)
+			_mainInstance.syncPlayer.release();		
+		//unregisterReceiver(mediaButtonReceiver);	
 		super.onDestroy();
 		
 	}
@@ -255,12 +266,15 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		
 		if (_syncProxy != null) {
 			try {
+				
 				_syncProxy.dispose();
+				
 			} catch (SyncException e) {
 				e.printStackTrace();
 			}
 			_syncProxy = null;
 			clearlockscreen();
+			
 		}
 	}
 	public static ProxyService getInstance(){
@@ -284,9 +298,11 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 	
 	private void initializeTheApp(){
+		
 		playingAudio = true;
-		_mainInstance.lockAppsScreen();
-		_mainInstance.playPauseCurrentPlayingSong();
+		//showLockScreen();
+		//_mainInstance.playPauseCurrentPlayingSong();
+		//whenever HMI STATUS will FULL, 1st song os list will play.
 		
 		//ButtonSubscriptions
 		initializeButtonsToBeSubscribed();
@@ -302,6 +318,8 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		
 		//ChoiceSet
 		createInteractionChoiceSet();
+		_mainInstance.playCurrentSong(0);
+		/*showLockScreen();*/
 	}
 	
 	private void initializeVoiceCommand(){
@@ -344,8 +362,8 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	
 	@Override
 	public void onOnHMIStatus(OnHMIStatus notification) {
-		// TODO Auto-generated method stub
 		Log.i(TAG, "" + notification);
+		
 		switch(notification.getSystemContext()) {
 		case SYSCTXT_MAIN:
 			break;
@@ -369,44 +387,39 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 		
 		switch(notification.getHmiLevel()) {
+		//Checking bluetooth connectivity here to terminate the app in case bluetooth is not on.
 		case HMI_FULL:
-			if(_syncProxy.getAppInterfaceRegistered()){
-			if (notification.getFirstRun()) {
-				initializeTheApp();
+			 if (driverdistrationNotif == false) {
+				 
+				 DebugTool.logError("LockScreen calling");				 showLockScreen();    DebugTool.logError("LockScreen called");
+				 }
+				if(_syncProxy.getAppInterfaceRegistered()){
+					if (notification.getFirstRun()) {
+						initializeTheApp();
 				
-			} 
-		}
-//			if (_syncProxy.getAppInterfaceRegistered()) {
-//				// if (hmiFull) {
-//				if (notification.getFirstRun()) {
-//
-//					try {
-//						_syncProxy.show("Sync Music Player", "", TextAlignment.CENTERED, nextCorrID());
-//						// MainActivity.getInstance().playPauseCurrentPlayingSong();
-//						Log.d(TAG, "First run");
-//						initializeTheApp();
-//					} catch (SyncException e) {
-//					}
-//
-//				} else {
-//					try {
-//						if (!mbWaitingForResponse) {
-//							_syncProxy.show("Sync Music Player", "", TextAlignment.CENTERED, nextCorrID());
-//						}
-//					} catch (SyncException e) {
-//
-//					}
-//				}
-//				// }
-//
-//			}
+					} 
+				} else {
+					try {
+						_syncProxy.show("SyncProxy", "Alive", TextAlignment.CENTERED, autoIncCorrId++);
+					} catch (SyncException e) {
+						DebugTool.logError("Not Able to send Show", e);
+					}
+				}
 			
+		
 			break;
 		case HMI_LIMITED:
+			Log.i("SyncProxy", "HMI_LIMITED");
+			if (driverdistrationNotif == false) {showLockScreen();}
 			break;
 		case HMI_BACKGROUND:
+			Log.i("SyncProxy", "HMI_BACKGROUND");
+			if (driverdistrationNotif == false) {showLockScreen();}
 			break;
 		case HMI_NONE:
+			Log.i("SyncProxy", "HMI_NONE");
+			   driverdistrationNotif = false;
+			   clearlockscreen();
 			break;
 		default:
 			return;
@@ -424,53 +437,82 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onProxyClosed(String arg0, Exception e) {
 		// TODO Auto-generated method stub
-		Log.e(TAG, "onProxyClosed: " + arg0, e);
+		Log.e(TAG, "onProxyClosed: TDK-EXIT" + arg0, e);
 		
-		boolean wasConnected = !firstHMIStatusChange;
-		firstHMIStatusChange = true;
-		if (wasConnected) {
-			final SyncMainActivity mainActivity = SyncMainActivity.getInstance();
-			if (mainActivity != null) {
-				mainActivity.runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						mainActivity.onProxyClosed();
-					}
-				});
-			} else {
-				Log.w(TAG, "mainActivity not found");
+//		boolean wasConnected = !firstHMIStatusChange;
+//		firstHMIStatusChange = true;
+//		if (wasConnected) {
+//			final SyncMainActivity mainActivity = SyncMainActivity.getInstance();
+//			if (mainActivity != null) {
+//				mainActivity.runOnUiThread(new Runnable() {
+//					@Override
+//					public void run() {
+//						mainActivity.onProxyClosed();
+//						SyncMainActivity.getInstance().finish();
+//						//clearlockscreen();
+//						stopSelf();
+//						LockScreenActivity.getInstance().finish();
+//					}
+//				});
+//			} else {
+//				Log.w(TAG, "mainActivity not found");
+//			}
+//		}
+		
+//		if(((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.SYNC_PROXY_CYCLED
+//				&& ((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.BLUETOOTH_DISABLED) {
+//			reset();
+//		}
+		clearlockscreen();
+		if((((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.SYNC_PROXY_CYCLED))
+		{
+			if (((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.BLUETOOTH_DISABLED) 
+			{
+				Log.v(TAG, "reset proxy in onproxy closed");
+				reset();
 			}
-		}
-		
-		if(((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.SYNC_PROXY_CYCLED
-				&& ((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.BLUETOOTH_DISABLED) {
-			reset();
 		}
 			
 	}
 	
 	public void reset(){
-		   try {
-			   if (_syncProxy != null) _syncProxy.resetProxy();
-	           else startProxyIfNetworkConnected();
-			} catch (SyncException e1) {
-				e1.printStackTrace();
-				//something goes wrong, & the proxy returns as null, stop the service.
-				//do not want a running service with a null proxy
-				if (_syncProxy == null){
-					stopSelf();
-				}
-			}
+		
+		if (_syncProxy != null) {
+			   try {
+				   _syncProxy.resetProxy();
+			   } catch (SyncException e1) {
+				   e1.printStackTrace();
+				   //something goes wrong, & the proxy returns as null, stop the service.
+				   //do not want a running service with a null proxy
+				   if (_syncProxy == null){
+					   stopSelf();
+				   }
+			   }
+		   }else {
+			   startProxy();
+		   }
+//		   try {
+//			   if (_syncProxy != null)
+//				   _syncProxy.resetProxy();
+//	           else startProxyIfNetworkConnected();
+//			} catch (SyncException e1) {
+//				e1.printStackTrace();
+//				//something goes wrong, & the proxy returns as null, stop the service.
+//				//do not want a running service with a null proxy
+//				if (_syncProxy == null){
+//					stopSelf();
+//				}
+//			}
 		}
 	
 	/**
 	 * Restarting SyncProxyALM. For example after changing transport type
 	 */
-	public void restart() {
+/*	public void restart() {
 		Log.i(TAG, "ProxyService.Restart SyncProxyALM.");
 		disposeSyncProxy();
 		startProxyIfNetworkConnected();
-	}
+	}*/
 	
 	@Override
 	public void onError(String info, Exception e) {
@@ -563,16 +605,16 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
 				break;
 			case PRESET_0:
-				SubscribeVehicleDataClass.getInstance(ProxyService.this, 0).getVehicleData();
-				//_mainInstance.playTrackNumber(0);
+				//SubscribeVehicleDataClass.getInstance(ProxyService.this, 0).getVehicleData();
+				_mainInstance.playTrackNumber(0);
 				break;
 			case PRESET_1:
-				SubscribeVehicleDataClass.getInstance(ProxyService.this, 1).getVehicleData();
-				//_mainInstance.playTrackNumber(1);
+				//SubscribeVehicleDataClass.getInstance(ProxyService.this, 1).getVehicleData();
+				_mainInstance.playTrackNumber(1);
 				break;
 			case PRESET_2:
-				SubscribeVehicleDataClass.getInstance(ProxyService.this, 2).getVehicleData();
-				//_mainInstance.playTrackNumber(2);
+				//SubscribeVehicleDataClass.getInstance(ProxyService.this, 2).getVehicleData();
+				_mainInstance.playTrackNumber(2);
 				break;
 			case PRESET_3:
 				_mainInstance.playTrackNumber(3);
@@ -838,8 +880,18 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 
 	@Override
-	public void onOnDriverDistraction(OnDriverDistraction arg0) {
+	public void onOnDriverDistraction(OnDriverDistraction notification) {
 		// TODO Auto-generated method stub
+		driverdistrationNotif = true;
+		//Log.i(TAG, "dd: " + notification.getStringState());
+		if (notification.getState() == DriverDistractionState.DD_OFF)
+		{
+			Log.i(TAG,"clear lock, DD_OFF");
+			clearlockscreen();
+		} else {
+			Log.i(TAG,"show lockscreen, DD_ON");
+			showLockScreen();
+		}
 		
 	}
 
@@ -970,7 +1022,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		}
 		
 		//Choice set for Info to be used TTS and TTs chunk
-		Vector<Choice> ttsVector = new Vector<Choice>();
+			Vector<Choice> ttsVector = new Vector<Choice>();
 			Choice choice1 = new Choice();
 			choice1.setChoiceID(lastIndexOfSongChoiceId+1);
 			choice1.setMenuName("Info1");
@@ -1252,14 +1304,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}*/
 
 	private void showSoftButtonsOnScreen(){
-		/*Image playimage = new Image();
-		playimage.setValue("0xCF");
-		playimage.setImageType(ImageType.STATIC);*/
-
-//		Image pauseimage = new Image();
-//		pauseimage.setValue("0xD0");
-//		pauseimage.setImageType(ImageType.STATIC);
-
 		next = new SoftButton();
 		next.setText("Next");
 		next.setSoftButtonID(100);
@@ -1369,6 +1413,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		}
 		lockscreenUP = false;
 	}
+	public boolean getLockScreenStatus() {
+		return lockscreenUP;
+		}
 	
 	/*private void PerformVoiceRecordingInteraction(){
 		Alert alert = new Alert();

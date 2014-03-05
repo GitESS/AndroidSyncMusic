@@ -4,12 +4,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -62,8 +64,8 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 	private Utilities utils;
 	private int seekForwardTime = 30000; // 5000 milliseconds
 	private int seekBackwardTime = 30000; // 5000 milliseconds
-	private int currentSongIndex; 
-	private int currentIndex;
+	private int currentSongIndex = 0; 
+	//private int currentIndex;
 	private boolean isShuffle = false;
 	private boolean isRepeat = false;
 	long totalDuration = 0;
@@ -90,27 +92,30 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 		this.currentPlayingSongIndex = currentPlayingSongIndex;
 	}
 
-	public int getCurrentIndex() {
+	/*public int getCurrentIndex() {
 		return currentIndex;
 	}
 
 	public void setCurrentIndex(int currentIndex) {
 		this.currentIndex = currentIndex;
-	}
+	}*/
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		_activity = this;
-				
-		if (isFirstActivityRun) {
-			propertiesUI();
-		} else {
-			showPropertiesInTitle();
-			startSyncProxy();
-		}
+		
+						
+//		if (isFirstActivityRun) {
+//			//propertiesUI();
+//			
+//		} else {
+//			//showPropertiesInTitle();
+//			startSyncProxy();
+//		}
 		
 		setContentView(R.layout.player);
+		startSyncProxy();
+		_activity = this;
 		// Set all player buttons
 		setAllMusicPlayerButtons();
 		
@@ -338,31 +343,33 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 				 * Button Click event for Play list click event
 				 * Launches list activity which displays list of songs
 				 * */
-				btnPlaylist.setOnClickListener(new View.OnClickListener() {
-					
-					@Override
-					public void onClick(View arg0) {
-						Intent i = new Intent(getApplicationContext(), PlayListActivity.class);
-						startActivityForResult(i, 100);			
-					}
-				});
+//				btnPlaylist.setOnClickListener(new View.OnClickListener() {
+//					
+//					@Override
+//					public void onClick(View arg0) {
+//						Intent i = new Intent(getApplicationContext(), PlayListActivity.class);
+//						startActivityForResult(i, 100);			
+//					}
+//				});
 	}
 	/**
 	 * Receiving song index from playlist view
 	 * and play the song
 	 * */
-	@Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        
-        if(resultCode == 100){
-         	 currentSongIndex = data.getExtras().getInt("songIndex");
-         	 setCurrentIndex(currentSongIndex);
-         	 // play selected song
-             playCurrentSong(currentSongIndex);
-        }
- 
-    }
+//	@Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//        
+//        if(resultCode == 100){
+//         	 currentSongIndex = data.getExtras().getInt("songIndex");
+//         	 setCurrentIndex(currentSongIndex);
+//         	 // play selected song
+//             playCurrentSong(currentSongIndex);
+//        }
+// 
+//    }
+	
+	
 	
 	
 	//Go to previous Song from current one
@@ -458,7 +465,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 	 * currently making it work on 0 - 9 only
 	 * **/
 	public void playTrackNumber(final int trackNo){
-		trackNumber = this.getCurrentIndex();
+		trackNumber = currentSongIndex;
 		if((trackNo > -1) && (trackNo <=9)){
 			playCurrentSong(trackNo);
 		} else {
@@ -491,7 +498,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 				// Displaying Song title
 				String songTitle = songsList.get(songIndex).get("songTitle");
 				ProxyService.getProxyInstance().show("Track No- :"+songIndex,	songTitle, TextAlignment.LEFT_ALIGNED, ProxyService.getInstance().nextCorrID());
-				songTitleLabel.setText(songTitle);
+				//songTitleLabel.setText(songTitle);
 
 				// Changing Button Image to pause image
 				btnPlay.setImageResource(R.drawable.btn_pause);
@@ -501,7 +508,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 				songProgressBar.setMax(100);
 
 				// Updating progress bar
-				updateProgressBar();
+				//updateProgressBar();
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
 			} catch (IllegalStateException e) {
@@ -535,19 +542,21 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 					});
 			alert.show();
 		}
+		setCurrentPlayingSongIndex(songIndex);
+		//currentSongIndex = songIndex;
 	}
 	
 	/**
 	 * Update timer on seekbar
-	 * */
+	 * *//*
 	public void updateProgressBar() {
         mHandler.postDelayed(mUpdateTimeTask, 100);        
-    }
+    }*/
 	
 	/**
 	 * Background Runnable thread
 	 * */
-	private Runnable mUpdateTimeTask = new Runnable() {
+	/*private Runnable mUpdateTimeTask = new Runnable() {
 		   public void run() {
 			   long totalDuration = syncPlayer.getDuration();
 			   long currentDuration = syncPlayer.getCurrentPosition();
@@ -565,7 +574,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 			   // Running this thread after 100 milliseconds
 		       mHandler.postDelayed(this, 100);
 		   }
-		};
+		};*/
 
 	@Override
 	public void onProgressChanged(SeekBar seekBar, int progress,
@@ -577,13 +586,13 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 	@Override
 	public void onStartTrackingTouch(SeekBar seekBar) {
 		// TODO Auto-generated method stub
-		mHandler.removeCallbacks(mUpdateTimeTask);
+		//mHandler.removeCallbacks(mUpdateTimeTask);
 	}
 
 	@Override
 	public void onStopTrackingTouch(SeekBar seekBar) {
 		// TODO Auto-generated method stub
-		mHandler.removeCallbacks(mUpdateTimeTask);
+		/*mHandler.removeCallbacks(mUpdateTimeTask);
 		int totalDuration = syncPlayer.getDuration();
 		int currentPosition = utils.progressToTimer(seekBar.getProgress(), totalDuration);
 		
@@ -591,7 +600,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 		syncPlayer.seekTo(currentPosition);
 		
 		// update timer progress again
-		updateProgressBar();
+		updateProgressBar();*/
 	}
 
 	@Override
@@ -640,7 +649,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 		totalDuration = 0;
 		currentDuration = 0;
 		 moveTaskToBack(true);
-		mHandler.removeCallbacks(mUpdateTimeTask);
+		//mHandler.removeCallbacks(mUpdateTimeTask);
 		
 	}
 	
@@ -801,18 +810,71 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 			/** Starts the sync proxy at startup after selecting protocol features. */
 			//Bug could be here
 			private void startSyncProxy() {
-				if (ProxyService.getInstance() == null) {
-					Intent startService = new Intent(SyncMainActivity._activity, ProxyService.class);
-					Toast.makeText(getApplicationContext(), "Calling start Service to Start the Service", Toast.LENGTH_LONG).show();
-					startService(startService);
-				} else {
-					ProxyService.getInstance().setCurrentActivity(SyncMainActivity._activity);
-				}
+				//showPropertiesInTitle();
+				boolean isSYNCpaired = false;
+				 // Get the local Bluetooth adapter
+	            BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+	          //BT Adapter exists, is enabled, and there are paired devices with the name SYNC
+	    		//Ideally start service and start proxy if already connected to sync
+	    		//but, there is no way to tell if a device is currently connected (pre OS 4.0)
+	            
+	            if (mBtAdapter != null)
+	    		{
+	    			if ((mBtAdapter.isEnabled() && mBtAdapter.getBondedDevices().isEmpty() == false)) 
+	    			{
+	    				// Get a set of currently paired devices
+	    				Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
+	    		
+	    				// Check if there is a paired device with the name "SYNC"
+	    		        if (pairedDevices.size() > 0) {
+	    		            for (BluetoothDevice device : pairedDevices) {
+	    		               if (device.getName().toString().contains("SYNC")) {
+	    		            	   isSYNCpaired = true;
+	    		            	   break;
+	    		               }
+	    		            }
+	    		        } else {
+	    		        	Log.i("TAG", "A No Paired devices with the name sync");
+	    		        }
+	    		        
+	    		        if (isSYNCpaired == true) { 		        	
+	    		        	if (ProxyService.getInstance() == null) {
+	    		        		Intent startIntent = new Intent(this, ProxyService.class);
+	    		        		startService(startIntent);
+	    		        	} else {
+	    		        		//if the service is already running and proxy is up, set this as current UI activity
+	    		        		ProxyService serviceInstance = ProxyService.getInstance();
+	    		        		serviceInstance.setCurrentActivity(this);
+	    		        		SyncProxyALM proxyInstance = ProxyService.getProxyInstance();
+	    		        		if(proxyInstance != null)
+	    		        		{
+	    		        			serviceInstance.reset();
+	    		        		}
+	    		        		else 
+	    		        		{
+	    		        			Log.i("TAG", "proxy is null");	
+	    		        			serviceInstance.startProxy();
+	    		        		}    		        		
+	    		        		Log.i("TAG", " proxyAlive == true success");
+	    		        	}
+	    		        }
+	    			}
+	    		}
+	            
+//				if (ProxyService.getInstance() == null) {
+//					Intent startService = new Intent(SyncMainActivity._activity, ProxyService.class);
+//					Toast.makeText(getApplicationContext(), "Calling start Service to Start the Service", Toast.LENGTH_LONG).show();
+//					startService(startService);
+//				} else {
+//					ProxyService.getInstance().setCurrentActivity(SyncMainActivity._activity);
+//				}
 			}
 			
 			/** Called when a connection to a SYNC device has been closed. */
 			public void onProxyClosed() {
+				LockScreenActivity.getInstance().finish();
 				syncPlayer.reset();
+				SyncMainActivity.getInstance().finish();
 				Log.i(logTag, "Disconnected");
 			}
 			
