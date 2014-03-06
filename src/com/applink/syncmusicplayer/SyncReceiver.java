@@ -1,15 +1,11 @@
 package com.applink.syncmusicplayer;
 
-import java.io.IOException;
-
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import android.view.KeyEvent;
-
 import com.ford.syncV4.util.DebugTool;
 
 public class SyncReceiver extends BroadcastReceiver {
@@ -52,7 +48,14 @@ public class SyncReceiver extends BroadcastReceiver {
 					stopIntent.putExtras(intent);
 					context.stopService(stopIntent);
 				}
+				try{
+					
+				SyncMainActivity.getInstance().finish();	
 				LockScreenActivity.getInstance().finish();
+				ProxyService.getProxyInstance().resetProxy();
+				}catch(Exception e){
+					Log.i("SyncReceiver", e.toString());
+				}
 			}
 
 			// Listen for STATE_CHANGED as double-check when BT turned off & not
@@ -79,17 +82,18 @@ public class SyncReceiver extends BroadcastReceiver {
 					context.startService(startIntent);
 				}
 			}
-		} else if (intent.getAction().equals(
-				android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY)) {
+		} else if (intent.getAction().equals(android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY)) {
 			// signal your service to stop playback
+			try{
 				if (mainActivityInstance != null && mainActivityInstance.syncPlayer.isPlaying()) {
-					try{
+					
 						mainActivityInstance.syncPlayer.stop();
-					}catch(Exception e){
-						Log.i("SyncReceiver", ""+e.toString());
-					}
+					
 				
-		}}
+		}}catch(Exception e){
+			Log.i("SyncReceiver", ""+e.toString());
+		}
+		}
 
 		
 	//################################################################## END CODE#####################################################################	

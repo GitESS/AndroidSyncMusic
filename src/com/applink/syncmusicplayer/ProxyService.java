@@ -95,20 +95,22 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	private BluetoothAdapter mBtAdapter;
 	public Boolean playingAudio = false;
 	protected SyncReceiver mediaButtonReceiver;
-	//variable to contain the current state of the lockscreen
+	// variable to contain the current state of the lockscreen
 	private boolean lockscreenUP = false;
 	private boolean firstHMIStatusChange = true;
 	private static boolean waitingForResponse = false;
 	private boolean driverdistrationNotif = false;
 	public int trackNumber = 1;
-	//Voice cmd implementation
+	private boolean isFullCalled = false;
+	// Voice cmd implementation
 	private Integer autoIncCNDCorrId = 1001;
 	private Integer choiceId = 1010;
 	private Integer choiceSetId = 1020;
 	private Integer interactionChoiceSetID = 1030;
 	private int lastIndexOfSongChoiceId;
-	private SoftButton next, previous, appInfo, applinkInfo, cmdInfo, scrollableMsg, APTHCheck, vehicleData;
-	
+	private SoftButton next, previous, appInfo, applinkInfo, cmdInfo,
+			scrollableMsg, APTHCheck, vehicleData;
+
 	public int getLastIndexOfSongChoiceId() {
 		return lastIndexOfSongChoiceId;
 	}
@@ -119,91 +121,95 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 	private ArrayList<HashMap<String, String>> songsList = new ArrayList<HashMap<String, String>>();
 
-	
 	@Override
 	public void onCreate() {
 		// TODO Auto-generated method stub
 		super.onCreate();
-		Toast.makeText(getApplicationContext(), "Control is on OnCreate if Service is not created, Create it", Toast.LENGTH_SHORT).show();
-//		IntentFilter mediaIntentFilter = new IntentFilter();
-//		mediaIntentFilter.addAction(Intent.ACTION_MEDIA_BUTTON);
-//		
-//		mediaButtonReceiver = new SyncReceiver();
-//		registerReceiver(mediaButtonReceiver, mediaIntentFilter);
-	
+		Toast.makeText(getApplicationContext(),
+				"Control is on OnCreate if Service is not created, Create it",
+				Toast.LENGTH_SHORT).show();
+		// IntentFilter mediaIntentFilter = new IntentFilter();
+		// mediaIntentFilter.addAction(Intent.ACTION_MEDIA_BUTTON);
+		//
+		// mediaButtonReceiver = new SyncReceiver();
+		// registerReceiver(mediaButtonReceiver, mediaIntentFilter);
+
 		Log.i(TAG, "ProxyService.onCreate()");
 		_instance = this;
 	}
-	
+
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.i(TAG, "ProxyService.onStartCommand()");
-		Toast.makeText(getApplicationContext(), "Control is on OnStartCommand", Toast.LENGTH_SHORT).show();
-//		startProxyIfNetworkConnected();
-//		
-//        setCurrentActivity(SyncMainActivity.getInstance());
+		Toast.makeText(getApplicationContext(), "Control is on OnStartCommand",
+				Toast.LENGTH_SHORT).show();
+		// startProxyIfNetworkConnected();
+		//
+		// setCurrentActivity(SyncMainActivity.getInstance());
 		mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-		if (mBtAdapter != null){
-			if (mBtAdapter.isEnabled()){
+		if (mBtAdapter != null) {
+			if (mBtAdapter.isEnabled()) {
 				startProxy();
 			}
 		}
-	
-    if (SyncMainActivity.getInstance() != null) {
-    	setCurrentActivity(SyncMainActivity.getInstance());
-    }
-			
-        return START_STICKY;
-		
+
+		if (SyncMainActivity.getInstance() != null) {
+			setCurrentActivity(SyncMainActivity.getInstance());
+		}
+
+		return START_STICKY;
+
 	}
-	
+
 	protected int nextCorrID() {
 		autoIncCorrId++;
 		return autoIncCorrId;
 	}
-	
+
 	protected int nextCMDCorrID() {
 		autoIncCNDCorrId++;
 		return autoIncCNDCorrId;
 	}
-	
+
 	protected int nextChoiceCorrID() {
 		choiceId++;
 		return choiceId;
 	}
-	
+
 	protected int nextChoiceSetCorrID() {
 		choiceSetId++;
 		return choiceSetId;
 	}
-	
+
 	protected int nextInteractionChoiceCorrID() {
 		interactionChoiceSetID++;
 		return interactionChoiceSetID;
 	}
-	
-//	public void startProxyIfNetworkConnected(){
-//		Log.i(TAG, "startProxyIfNetworkConnected()");
-//		final SharedPreferences prefs = getSharedPreferences(Const.PREFS_NAME,
-//				MODE_PRIVATE);
-//		final int transportType = prefs.getInt(Const.Transport.PREFS_KEY_TRANSPORT_TYPE, Const.Transport.PREFS_DEFAULT_TRANSPORT_TYPE);
-//
-//		if (transportType == Const.Transport.KEY_BLUETOOTH) {
-//			Log.d(TAG, "ProxyService. onStartCommand(). Transport = Bluetooth.");
-//			mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-//			if (mBtAdapter != null) {
-//				if (mBtAdapter.isEnabled()) {
-//					startProxy();
-//				}
-//			}
-//		} else {
-//			startProxy();
-//		}
-//	}
-	
-	public void startProxy(){
+
+	// public void startProxyIfNetworkConnected(){
+	// Log.i(TAG, "startProxyIfNetworkConnected()");
+	// final SharedPreferences prefs = getSharedPreferences(Const.PREFS_NAME,
+	// MODE_PRIVATE);
+	// final int transportType =
+	// prefs.getInt(Const.Transport.PREFS_KEY_TRANSPORT_TYPE,
+	// Const.Transport.PREFS_DEFAULT_TRANSPORT_TYPE);
+	//
+	// if (transportType == Const.Transport.KEY_BLUETOOTH) {
+	// Log.d(TAG, "ProxyService. onStartCommand(). Transport = Bluetooth.");
+	// mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+	// if (mBtAdapter != null) {
+	// if (mBtAdapter.isEnabled()) {
+	// startProxy();
+	// }
+	// }
+	// } else {
+	// startProxy();
+	// }
+	// }
+
+	public void startProxy() {
 		Log.i(TAG, "ProxyService.startProxy()");
-		
+
 		if (_syncProxy == null) {
 			try {
 				SharedPreferences settings = getSharedPreferences(
@@ -216,129 +222,162 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				int transportType = settings.getInt(
 						Const.Transport.PREFS_KEY_TRANSPORT_TYPE,
 						Const.Transport.PREFS_DEFAULT_TRANSPORT_TYPE);
-//				String ipAddress = settings.getString(
-//						Const.Transport.PREFS_KEY_TRANSPORT_IP,
-//						Const.Transport.PREFS_DEFAULT_TRANSPORT_IP);
-//				int tcpPort = settings.getInt(
-//						Const.Transport.PREFS_KEY_TRANSPORT_PORT,
-//						Const.Transport.PREFS_DEFAULT_TRANSPORT_PORT);
-//				boolean autoReconnect = settings
-//						.getBoolean(
-//								Const.Transport.PREFS_KEY_TRANSPORT_RECONNECT,
-//								Const.Transport.PREFS_DEFAULT_TRANSPORT_RECONNECT_DEFAULT);
+				// String ipAddress = settings.getString(
+				// Const.Transport.PREFS_KEY_TRANSPORT_IP,
+				// Const.Transport.PREFS_DEFAULT_TRANSPORT_IP);
+				// int tcpPort = settings.getInt(
+				// Const.Transport.PREFS_KEY_TRANSPORT_PORT,
+				// Const.Transport.PREFS_DEFAULT_TRANSPORT_PORT);
+				// boolean autoReconnect = settings
+				// .getBoolean(
+				// Const.Transport.PREFS_KEY_TRANSPORT_RECONNECT,
+				// Const.Transport.PREFS_DEFAULT_TRANSPORT_RECONNECT_DEFAULT);
 
 				if (transportType == Const.Transport.KEY_BLUETOOTH) {
-					//_syncProxy = new SyncProxyALM(this, appName, isMediaApp);
-					_syncProxy = new SyncProxyALM(this, appName, isMediaApp, Language.EN_US, Language.EN_US, "584421907");
-					
-				} /*else {
-					//_syncProxy = new SyncProxyALM(this, appName, isMediaApp, new TCPTransportConfig(tcpPort, ipAddress, autoReconnect));
-					_syncProxy = new SyncProxyALM(this, appName, isMediaApp, Language.EN_US, Language.EN_US, "584421907", new TCPTransportConfig(tcpPort, ipAddress, autoReconnect));
-				}*/
+					// _syncProxy = new SyncProxyALM(this, appName, isMediaApp);
+					_syncProxy = new SyncProxyALM(this, appName, isMediaApp,
+							Language.EN_US, Language.EN_US, "584421907");
+
+				} /*
+				 * else { //_syncProxy = new SyncProxyALM(this, appName,
+				 * isMediaApp, new TCPTransportConfig(tcpPort, ipAddress,
+				 * autoReconnect)); _syncProxy = new SyncProxyALM(this, appName,
+				 * isMediaApp, Language.EN_US, Language.EN_US, "584421907", new
+				 * TCPTransportConfig(tcpPort, ipAddress, autoReconnect)); }
+				 */
 			} catch (SyncException e) {
 				e.printStackTrace();
-				//error creating proxy, returned proxy = null
-				if (_syncProxy == null){
+				// error creating proxy, returned proxy = null
+				if (_syncProxy == null) {
 					stopSelf();
 				}
 			}
 		}
 		Log.i(TAG, "ProxyService.startProxy() returning");
 	}
-	
+
 	@Override
 	public void onDestroy() {
 		// TODO Auto-generated method stub
 		Log.i(TAG, "ProxyService.onDestroy()");
-		
+
 		disposeSyncProxy();
 		clearlockscreen();
 		_instance = null;
 		if (_mainInstance.syncPlayer != null)
-			_mainInstance.syncPlayer.release();		
-		//unregisterReceiver(mediaButtonReceiver);	
+			_mainInstance.syncPlayer.release();
+		// unregisterReceiver(mediaButtonReceiver);
 		super.onDestroy();
-		
+
 	}
-	
+
 	public void disposeSyncProxy() {
 		Log.i(TAG, "ProxyService.disposeSyncProxy()");
-		
+
 		if (_syncProxy != null) {
 			try {
-				
+
 				_syncProxy.dispose();
-				
+
 			} catch (SyncException e) {
 				e.printStackTrace();
 			}
 			_syncProxy = null;
 			clearlockscreen();
-			
+
 		}
 	}
-	public static ProxyService getInstance(){
+
+	public static ProxyService getInstance() {
 		return _instance;
 	}
+
 	public void setCurrentActivity(SyncMainActivity currentActivity) {
 		if (this._mainInstance != null) {
 			this._mainInstance.finish();
 			this._mainInstance = null;
 		}
-		
+
 		this._mainInstance = currentActivity;
-		
+
 	}
-	public static SyncProxyALM getProxyInstance(){
+
+	public static SyncProxyALM getProxyInstance() {
 		return _syncProxy;
 	}
-	
+
 	public static void waiting(boolean waiting) {
 		waitingForResponse = waiting;
 	}
-	
-	private void initializeTheApp(){
-		
+
+	private void initializeTheApp() {
+
 		playingAudio = true;
-		//showLockScreen();
-		//_mainInstance.playPauseCurrentPlayingSong();
-		//whenever HMI STATUS will FULL, 1st song os list will play.
-		
-		//ButtonSubscriptions
+		// showLockScreen();
+		// _mainInstance.playCurrentSong(0);
+		// whenever HMI STATUS will FULL, 1st song os list will play.
+
+		// ButtonSubscriptions
 		initializeButtonsToBeSubscribed();
-		
+
 		// softButtons Implementation
 		showSoftButtonsOnScreen();
-		
-		//Menu Command
+
+		// Menu Command
 		initializeSubMenuCommandForSyncPlayer();
-		
-		//Voice Command
+
+		// Voice Command
 		initializeVoiceCommand();
-		
-		//ChoiceSet
+
+		// ChoiceSet
 		createInteractionChoiceSet();
 		_mainInstance.playCurrentSong(0);
-		/*showLockScreen();*/
+		// _mainInstance.setCurrentPlayingSongIndex(0);
+
+		showLockScreen();
 	}
-	
-	private void initializeVoiceCommand(){
+
+	private void initializeVoiceCommand() {
 		try {
-			_syncProxy.addCommand(nextCMDCorrID(), "Play", new Vector<String>(Arrays.asList(new String[] {"Play", "Play Song"})), nextCorrID());
-			_syncProxy.addCommand(nextCMDCorrID(), "Pause", new Vector<String>(Arrays.asList(new String[] {"Pause", "Pause Song"})), nextCorrID());
-			_syncProxy.addCommand(nextCMDCorrID(), "Next", new Vector<String>(Arrays.asList(new String[] {"Next", "Next Song"})), nextCorrID());
-			_syncProxy.addCommand(nextCMDCorrID(), "Previous", new Vector<String>(Arrays.asList(new String[] {"Previous", "Previous Song"})), nextCorrID());
-			_syncProxy.addCommand(nextCMDCorrID(), "Backward", new Vector<String>(Arrays.asList(new String[] {"Backward", "Seek Backward"})), nextCorrID());
-			_syncProxy.addCommand(nextCMDCorrID(), "Forward", new Vector<String>(Arrays.asList(new String[] {"Forward", "Seek Forward"})), nextCorrID());
-			_syncProxy.addCommand(nextCMDCorrID(), "Select Song", new Vector<String>(Arrays.asList(new String[] {"Select Song"})), nextCorrID());
-			_syncProxy.addCommand(nextCMDCorrID(), "info", new Vector<String>(Arrays.asList(new String[] {"info"})), nextCorrID());
+			_syncProxy.addCommand(nextCMDCorrID(), "Play", new Vector<String>(
+					Arrays.asList(new String[] { "Play", "Play Song" })),
+					nextCorrID());
+			_syncProxy.addCommand(nextCMDCorrID(), "Pause", new Vector<String>(
+					Arrays.asList(new String[] { "Pause", "Pause Song" })),
+					nextCorrID());
+			_syncProxy.addCommand(nextCMDCorrID(), "Next", new Vector<String>(
+					Arrays.asList(new String[] { "Next", "Next Song" })),
+					nextCorrID());
+			_syncProxy.addCommand(
+					nextCMDCorrID(),
+					"Previous",
+					new Vector<String>(Arrays.asList(new String[] { "Previous",
+							"Previous Song" })), nextCorrID());
+			_syncProxy.addCommand(
+					nextCMDCorrID(),
+					"Backward",
+					new Vector<String>(Arrays.asList(new String[] { "Backward",
+							"Seek Backward" })), nextCorrID());
+			_syncProxy.addCommand(
+					nextCMDCorrID(),
+					"Forward",
+					new Vector<String>(Arrays.asList(new String[] { "Forward",
+							"Seek Forward" })), nextCorrID());
+			_syncProxy.addCommand(
+					nextCMDCorrID(),
+					"Select Song",
+					new Vector<String>(Arrays
+							.asList(new String[] { "Select Song" })),
+					nextCorrID());
+			_syncProxy.addCommand(nextCMDCorrID(), "info", new Vector<String>(
+					Arrays.asList(new String[] { "info" })), nextCorrID());
 		} catch (SyncException e) {
-			 Log.e(TAG, "Error adding AddCommands", e);
+			Log.e(TAG, "Error adding AddCommands", e);
 		}
 	}
-	
-	private void initializeButtonsToBeSubscribed(){
-		try{
+
+	private void initializeButtonsToBeSubscribed() {
+		try {
 			_syncProxy.subscribeButton(ButtonName.OK, nextCorrID());
 			_syncProxy.subscribeButton(ButtonName.TUNEUP, nextCorrID());
 			_syncProxy.subscribeButton(ButtonName.TUNEDOWN, nextCorrID());
@@ -354,166 +393,160 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			_syncProxy.subscribeButton(ButtonName.PRESET_7, nextCorrID());
 			_syncProxy.subscribeButton(ButtonName.PRESET_8, nextCorrID());
 			_syncProxy.subscribeButton(ButtonName.PRESET_9, nextCorrID());
-		}catch(SyncException e){
+		} catch (SyncException e) {
 			e.printStackTrace();
 			Log.e(TAG, e.toString());
 		}
 	}
-	
+
 	@Override
 	public void onOnHMIStatus(OnHMIStatus notification) {
 		Log.i(TAG, "" + notification);
-		
-		switch(notification.getSystemContext()) {
+
+		switch (notification.getSystemContext()) {
 		case SYSCTXT_MAIN:
 			break;
 		case SYSCTXT_VRSESSION:
+			// try {
+			// initializeTheApp();
+			// } catch (Exception e) {
+			// Log.i("SyncProxy", "VRSESSION");
+			// }
 			break;
 		case SYSCTXT_MENU:
 			break;
 		default:
 			return;
-	}
-		switch(notification.getAudioStreamingState()) {
+		}
+		switch (notification.getAudioStreamingState()) {
 		case AUDIBLE:
-			if (playingAudio) 
-				_mainInstance.playCurrentSong(0);
+			// if (playingAudio)
+			// _mainInstance.playCurrentSong(0);
 			break;
 		case NOT_AUDIBLE:
 			_mainInstance.pauseCurrentSong();
 			break;
 		default:
 			return;
-	}
-		
-		switch(notification.getHmiLevel()) {
-		//Checking bluetooth connectivity here to terminate the app in case bluetooth is not on.
+		}
+
+		switch (notification.getHmiLevel()) {
+		// Checking bluetooth connectivity here to terminate the app in case
+		// bluetooth is not on.
 		case HMI_FULL:
-			 if (driverdistrationNotif == false) {
-				 
-				 DebugTool.logError("LockScreen calling");				 showLockScreen();    DebugTool.logError("LockScreen called");
-				 }
-				if(_syncProxy.getAppInterfaceRegistered()){
-					if (notification.getFirstRun()) {
-						initializeTheApp();
-				
-					} 
-				} else {
+			Log.i("HMI", "FULL");
+			isFullCalled = true;
+
+			if (_syncProxy.getAppInterfaceRegistered()) {
+				if (notification.getFirstRun()) {
 					try {
-						_syncProxy.show("SyncProxy", "Alive", TextAlignment.CENTERED, autoIncCorrId++);
+						_syncProxy.show("Welcome", "Sync Music Player",
+								TextAlignment.CENTERED, nextCorrID());
+						Log.i("Inside Full",
+								"Before Calling initializeTheApp()");
+						initializeTheApp();
 					} catch (SyncException e) {
-						DebugTool.logError("Not Able to send Show", e);
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
+
 				}
-			
-		
+			} else {
+				try {
+					_syncProxy.show("SyncProxy", "Alive",
+							TextAlignment.CENTERED, nextCorrID());
+				} catch (SyncException e) {
+					DebugTool.logError("Not Able to send Show", e);
+				}
+			}
+
 			break;
 		case HMI_LIMITED:
-			Log.i("SyncProxy", "HMI_LIMITED");
-			if (driverdistrationNotif == false) {showLockScreen();}
+			Log.i("HMI_LIMITED", "HMI_LIMITED");
+
 			break;
 		case HMI_BACKGROUND:
-			Log.i("SyncProxy", "HMI_BACKGROUND");
-			if (driverdistrationNotif == false) {showLockScreen();}
+			Log.i("HMI_BACKGROUND", "HMI_BACKGROUND");
+
 			break;
 		case HMI_NONE:
+			if (isFullCalled) {
+				clearlockscreen();
+				SyncMainActivity.getInstance().finish();
+				stopSelf();
+			}
 			Log.i("SyncProxy", "HMI_NONE");
-			   driverdistrationNotif = false;
-			   clearlockscreen();
+			//
 			break;
 		default:
 			return;
-	}
-		
+		}
+
 	}
 
 	@Override
 	public void onAddCommandResponse(AddCommandResponse addCmdResponse) {
 		// TODO Auto-generated method stub
 		Log.i(TAG, addCmdResponse.toString());
-		
+
 	}
-	
+
 	@Override
 	public void onProxyClosed(String arg0, Exception e) {
 		// TODO Auto-generated method stub
 		Log.e(TAG, "onProxyClosed: TDK-EXIT" + arg0, e);
-		
-//		boolean wasConnected = !firstHMIStatusChange;
-//		firstHMIStatusChange = true;
-//		if (wasConnected) {
-//			final SyncMainActivity mainActivity = SyncMainActivity.getInstance();
-//			if (mainActivity != null) {
-//				mainActivity.runOnUiThread(new Runnable() {
-//					@Override
-//					public void run() {
-//						mainActivity.onProxyClosed();
-//						SyncMainActivity.getInstance().finish();
-//						//clearlockscreen();
-//						stopSelf();
-//						LockScreenActivity.getInstance().finish();
-//					}
-//				});
-//			} else {
-//				Log.w(TAG, "mainActivity not found");
-//			}
-//		}
-		
-//		if(((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.SYNC_PROXY_CYCLED
-//				&& ((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.BLUETOOTH_DISABLED) {
-//			reset();
-//		}
+
 		clearlockscreen();
-		if((((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.SYNC_PROXY_CYCLED))
-		{
-			if (((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.BLUETOOTH_DISABLED) 
-			{
+		if ((((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.SYNC_PROXY_CYCLED)) {
+			if (((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.BLUETOOTH_DISABLED) {
 				Log.v(TAG, "reset proxy in onproxy closed");
-				reset();
+				// reset();
 			}
 		}
-			
+
 	}
-	
-	public void reset(){
-		
-		if (_syncProxy != null) {
-			   try {
-				   _syncProxy.resetProxy();
-			   } catch (SyncException e1) {
-				   e1.printStackTrace();
-				   //something goes wrong, & the proxy returns as null, stop the service.
-				   //do not want a running service with a null proxy
-				   if (_syncProxy == null){
-					   stopSelf();
-				   }
-			   }
-		   }else {
-			   startProxy();
-		   }
-//		   try {
-//			   if (_syncProxy != null)
-//				   _syncProxy.resetProxy();
-//	           else startProxyIfNetworkConnected();
-//			} catch (SyncException e1) {
-//				e1.printStackTrace();
-//				//something goes wrong, & the proxy returns as null, stop the service.
-//				//do not want a running service with a null proxy
-//				if (_syncProxy == null){
-//					stopSelf();
-//				}
-//			}
-		}
-	
+
+	public void reset() {
+
+		// if (_syncProxy != null) {
+		// try {
+		// _syncProxy.resetProxy();
+		// } catch (SyncException e1) {
+		// e1.printStackTrace();
+		// // something goes wrong, & the proxy returns as null, stop the
+		// // service.
+		// // do not want a running service with a null proxy
+		// if (_syncProxy == null) {
+		// stopSelf();
+		// }
+		// }
+		// } else {
+		// startProxy();
+		// }
+
+		// try {
+		// if (_syncProxy != null)
+		// _syncProxy.resetProxy();
+		// else startProxyIfNetworkConnected();
+		// } catch (SyncException e1) {
+		// e1.printStackTrace();
+		// //something goes wrong, & the proxy returns as null, stop the
+		// service.
+		// //do not want a running service with a null proxy
+		// if (_syncProxy == null){
+		// stopSelf();
+		// }
+		// }
+	}
+
 	/**
 	 * Restarting SyncProxyALM. For example after changing transport type
 	 */
-/*	public void restart() {
-		Log.i(TAG, "ProxyService.Restart SyncProxyALM.");
-		disposeSyncProxy();
-		startProxyIfNetworkConnected();
-	}*/
-	
+	/*
+	 * public void restart() { Log.i(TAG, "ProxyService.Restart SyncProxyALM.");
+	 * disposeSyncProxy(); startProxyIfNetworkConnected(); }
+	 */
+
 	@Override
 	public void onError(String info, Exception e) {
 		// TODO Auto-generated method stub
@@ -525,396 +558,398 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	public void onAddSubMenuResponse(AddSubMenuResponse subMenuResponse) {
 		// TODO Auto-generated method stub
 		Log.i(TAG, subMenuResponse.toString());
-		
+
 	}
 
 	@Override
 	public void onAlertResponse(AlertResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onCreateInteractionChoiceSetResponse(
 			CreateInteractionChoiceSetResponse interactionChoiceSetResponse) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onDeleteCommandResponse(DeleteCommandResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onDeleteInteractionChoiceSetResponse(
 			DeleteInteractionChoiceSetResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onDeleteSubMenuResponse(DeleteSubMenuResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
-	/*@Override
-	public void onEncodedSyncPDataResponse(EncodedSyncPDataResponse arg0) {
-		// TODO Auto-generated method stub
-		
-	}*/
-
-	
+	/*
+	 * @Override public void onEncodedSyncPDataResponse(EncodedSyncPDataResponse
+	 * arg0) { // TODO Auto-generated method stub
+	 * 
+	 * }
+	 */
 
 	@Override
 	public void onGenericResponse(GenericResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onOnButtonEvent(OnButtonEvent notification) {
 		// TODO Auto-generated method stub
-		Log.i(TAG, "" + notification);
+		Log.i(TAG, "" + notification.getButtonName());
+
 	}
 
 	@Override
 	public void onOnButtonPress(OnButtonPress notification) {
 		// TODO Auto-generated method stub
 		Log.i(TAG, "" + notification);
-		
+
 		audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-			
-		switch(notification.getButtonName())
-		{
-			case OK:
-				_mainInstance.playPauseCurrentPlayingSong();
-				break;
-			case SEEKLEFT:
-				_mainInstance.seekBackwardCurrentPlayingSong();
-				break;
-			case SEEKRIGHT:
-				_mainInstance.seekForwardCurrentPlayingSong();
-				break;
-			case TUNEUP:
-				audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
-				break;
-			case TUNEDOWN:
-				audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
-				break;
-			case PRESET_0:
-				//SubscribeVehicleDataClass.getInstance(ProxyService.this, 0).getVehicleData();
-				_mainInstance.playTrackNumber(0);
-				break;
-			case PRESET_1:
-				//SubscribeVehicleDataClass.getInstance(ProxyService.this, 1).getVehicleData();
-				_mainInstance.playTrackNumber(1);
-				break;
-			case PRESET_2:
-				//SubscribeVehicleDataClass.getInstance(ProxyService.this, 2).getVehicleData();
-				_mainInstance.playTrackNumber(2);
-				break;
-			case PRESET_3:
-				_mainInstance.playTrackNumber(3);
-				break;
-			case PRESET_4:
-				_mainInstance.playTrackNumber(4);
-				break;
-			case PRESET_5:
-				_mainInstance.playTrackNumber(5);
-				break;
-			case PRESET_6:
-				_mainInstance.playTrackNumber(6);
-				break;
-			case PRESET_7:
-				_mainInstance.playTrackNumber(7);
-				break;
-			case PRESET_8:
-				_mainInstance.playTrackNumber(8);
-				break;
-			case PRESET_9:
-				_mainInstance.playTrackNumber(9);
-				break;
-			
-			default:
-				break;
+
+		switch (notification.getButtonName()) {
+		case OK:
+			_mainInstance.playPauseCurrentPlayingSong();
+			break;
+		case SEEKLEFT:
+			_mainInstance.seekBackwardCurrentPlayingSong();
+			break;
+		case SEEKRIGHT:
+			_mainInstance.seekForwardCurrentPlayingSong();
+			break;
+		case TUNEUP:
+			audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+					AudioManager.ADJUST_RAISE, AudioManager.FLAG_VIBRATE);
+			break;
+		case TUNEDOWN:
+			audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+					AudioManager.ADJUST_LOWER, AudioManager.FLAG_VIBRATE);
+			break;
+		case PRESET_0:
+			// SubscribeVehicleDataClass.getInstance(ProxyService.this,
+			// 0).getVehicleData();
+			_mainInstance.playCurrentSong(0);
+			break;
+		case PRESET_1:
+			// SubscribeVehicleDataClass.getInstance(ProxyService.this,
+			// 1).getVehicleData();
+			_mainInstance.playCurrentSong(1);
+			break;
+		case PRESET_2:
+			// SubscribeVehicleDataClass.getInstance(ProxyService.this,
+			// 2).getVehicleData();
+			_mainInstance.playCurrentSong(2);
+			break;
+		case PRESET_3:
+			_mainInstance.playCurrentSong(3);
+			break;
+		case PRESET_4:
+			_mainInstance.playCurrentSong(4);
+			break;
+		case PRESET_5:
+			_mainInstance.playCurrentSong(5);
+			break;
+		case PRESET_6:
+			_mainInstance.playCurrentSong(6);
+			break;
+		case PRESET_7:
+			_mainInstance.playCurrentSong(7);
+			break;
+		case PRESET_8:
+			_mainInstance.playCurrentSong(8);
+			break;
+		case PRESET_9:
+			_mainInstance.playCurrentSong(9);
+			break;
+
+		default:
+			break;
 		}
-		
+
 		// Handling softButtons notifications-- 6 softbuttons cmd are albumList,
-				// SongList, Song info, app info, applink info, command info
+		// SongList, Song info, app info, applink info, command info
 
-				if (notification.getCustomButtonName().equals(100)) {
-					SyncMainActivity.getInstance().jumpToNextSong();
-					Alert next = new Alert();
-					next.setAlertText1("Next");
-					next.setDuration(1000);
-					next.setCorrelationID(nextCorrID());
-					Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-					ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-							"Next"));
-					next.setTtsChunks(ttsChunks);
-					try {
-						_syncProxy.sendRPCRequest(next);
-					} catch (SyncException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+		if (notification.getCustomButtonName().equals(100)) {
+			SyncMainActivity.getInstance().jumpToNextSong();
+			Alert next = new Alert();
+			next.setAlertText1("Next");
+			next.setDuration(1000);
+			next.setCorrelationID(nextCorrID());
+			Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
+			ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
+					"Next"));
+			next.setTtsChunks(ttsChunks);
+			try {
+				_syncProxy.sendRPCRequest(next);
+			} catch (SyncException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
-				} else if (notification.getCustomButtonName().equals(101)) {
-					SyncMainActivity.getInstance().jumpToPreviousSong();
-					Alert previous = new Alert();
-					previous.setAlertText1("Previous");
-					previous.setDuration(1000);
-					previous.setCorrelationID(nextCorrID());
-					Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-					ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-							"Previous"));
-					previous.setTtsChunks(ttsChunks);
-					try {
-						_syncProxy.sendRPCRequest(previous);
-					} catch (SyncException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				} /*else if (notification.getCustomButtonName().equals(102)) {
-					SyncMainActivity.getInstance().seekForwardCurrentPlayingSong();
-					Alert forward = new Alert();
-					forward.setAlertText1("Forward");
-					forward.setDuration(1000);
-					forward.setCorrelationID(nextCorrID());
-					Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-					ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-							"Seek Forward"));
-					forward.setTtsChunks(ttsChunks);
-					try {
-						_syncProxy.sendRPCRequest(forward);
-					} catch (SyncException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				} else if (notification.getCustomButtonName().equals(103)) {
-					SyncMainActivity.getInstance().seekBackwardCurrentPlayingSong();
-					Alert backward = new Alert();
-					backward.setAlertText1("Backward");
-					backward.setDuration(1000);
-					backward.setCorrelationID(nextCorrID());
-					Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-					ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-							"Seek Backward"));
-					backward.setTtsChunks(ttsChunks);
-					try {
-						_syncProxy.sendRPCRequest(backward);
-					} catch (SyncException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}*/ else if (notification.getCustomButtonName().equals(104)) {
-					Alert appInfo = new Alert();
-					appInfo.setAlertText1("Application Info");
-					appInfo.setDuration(3000);
-					appInfo.setCorrelationID(nextCorrID());
-					Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-					ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-							"This is a Applink enabled Music player App, Designed specifically for Ford's SYNC."));
-					appInfo.setTtsChunks(ttsChunks);
-					try {
-						_syncProxy.sendRPCRequest(appInfo);
-					} catch (SyncException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				} else if (notification.getCustomButtonName().equals(105)) {
-					Alert applinkinfo = new Alert();
-					applinkinfo.setAlertText1("AppLink Information");
-					applinkinfo.setDuration(3000);
-					applinkinfo.setCorrelationID(nextCorrID());
-					Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-					ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-							"AppLink is a Ford's sdk, Designed to develop AppLink enabled Application for Ford's car!"));
-					applinkinfo.setTtsChunks(ttsChunks);
-					try {
-						_syncProxy.sendRPCRequest(applinkinfo);
-					} catch (SyncException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					/*try {
-						
-								_syncProxy.show("AppLink info",
-										"AppLink is a Ford's sdk, Designed to develop AppLink enabled Application for Ford's car!",
-										TextAlignment.LEFT_ALIGNED, nextCorrID());
-					} catch (SyncException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}*/
-				} else if (notification.getCustomButtonName().equals(106)) {
-					Alert alert = new Alert();
-					alert.setAlertText1("Command Information");
-					alert.setAlertText2("");
-					alert.setDuration(3000);
-					alert.setCorrelationID(nextCorrID());
-					Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-					ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-							"Four Main Commands are available in this Music application. Apart from Play and pause commands. +" +
-							"There are Next, Previous, Seek forward and Seek Backward commands are vailable as well. These commmands are also available in Voice recognition and Sub Menu CMD forms"));
-					alert.setTtsChunks(ttsChunks);
-					try {
-						_syncProxy.sendRPCRequest(alert);
-					} catch (SyncException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				} else if(notification.getCustomButtonName().equals(107)){
-					String scrollableMessageBody = new String("This is Applink enabled Application. This Player has Voice command. User can give voice command to operate this player. Available Voice commands are Play, Pause, Next, Previous, Backward and forwards");
-					ScrollableMessage scrllMsg = new ScrollableMessage();
-					scrllMsg.setCorrelationID(nextCorrID());
-					scrllMsg.setTimeout(30000);
-					scrllMsg.setScrollableMessageBody(scrollableMessageBody);
-					
-					try {
-						_syncProxy.sendRPCRequest(scrllMsg);
-					} catch (SyncException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				} else if(notification.getCustomButtonName().equals(108)){
-					//PerformVoiceRecordingInteraction();
-					//new PerformAudioPassThruClass();
-					PerformAudioPassThruClass.getInstance(ProxyService.this).show();
-				} else if(notification.getCustomButtonName().equals(109)){
-					Vector<String> str = new Vector<String>();
-					str.add("Slider" );
-					str.add("Test");
-					str.add( "Footer");
-					Slider slider = new Slider();
-					slider.setCorrelationID(5001);
-					slider.setNumTicks(3);
-					slider.setPosition(3);
-					slider.setSliderHeader("SLider Test");
-					slider.setSliderFooter(str);
-					slider.setTimeout(5000);
-					
-					try {
-						_syncProxy.sendRPCRequest(slider);
-						_syncProxy.show("Slider", "Coming Soon", TextAlignment.CENTERED, nextCorrID());
-					} catch (SyncException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-				}
+		} else if (notification.getCustomButtonName().equals(101)) {
+			SyncMainActivity.getInstance().jumpToPreviousSong();
+			Alert previous = new Alert();
+			previous.setAlertText1("Previous");
+			previous.setDuration(1000);
+			previous.setCorrelationID(nextCorrID());
+			Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
+			ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
+					"Previous"));
+			previous.setTtsChunks(ttsChunks);
+			try {
+				_syncProxy.sendRPCRequest(previous);
+			} catch (SyncException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} /*
+		 * else if (notification.getCustomButtonName().equals(102)) {
+		 * SyncMainActivity.getInstance().seekForwardCurrentPlayingSong(); Alert
+		 * forward = new Alert(); forward.setAlertText1("Forward");
+		 * forward.setDuration(1000); forward.setCorrelationID(nextCorrID());
+		 * Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
+		 * ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
+		 * "Seek Forward")); forward.setTtsChunks(ttsChunks); try {
+		 * _syncProxy.sendRPCRequest(forward); } catch (SyncException e) { //
+		 * TODO Auto-generated catch block e.printStackTrace(); } } else if
+		 * (notification.getCustomButtonName().equals(103)) {
+		 * SyncMainActivity.getInstance().seekBackwardCurrentPlayingSong();
+		 * Alert backward = new Alert(); backward.setAlertText1("Backward");
+		 * backward.setDuration(1000); backward.setCorrelationID(nextCorrID());
+		 * Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
+		 * ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
+		 * "Seek Backward")); backward.setTtsChunks(ttsChunks); try {
+		 * _syncProxy.sendRPCRequest(backward); } catch (SyncException e) { //
+		 * TODO Auto-generated catch block e.printStackTrace(); } }
+		 */else if (notification.getCustomButtonName().equals(104)) {
+			Alert appInfo = new Alert();
+			appInfo.setAlertText1("Application Info");
+			appInfo.setDuration(3000);
+			appInfo.setCorrelationID(nextCorrID());
+			Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
+			ttsChunks
+					.add(TTSChunkFactory
+							.createChunk(
+									SpeechCapabilities.TEXT,
+									"This is a Applink enabled Music player App, Designed specifically for Ford's SYNC."));
+			appInfo.setTtsChunks(ttsChunks);
+			try {
+				_syncProxy.sendRPCRequest(appInfo);
+			} catch (SyncException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else if (notification.getCustomButtonName().equals(105)) {
+			Alert applinkinfo = new Alert();
+			applinkinfo.setAlertText1("AppLink Information");
+			applinkinfo.setDuration(3000);
+			applinkinfo.setCorrelationID(nextCorrID());
+			Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
+			ttsChunks
+					.add(TTSChunkFactory
+							.createChunk(
+									SpeechCapabilities.TEXT,
+									"AppLink is a Ford's sdk, Designed to develop AppLink enabled Application for Ford's car!"));
+			applinkinfo.setTtsChunks(ttsChunks);
+			try {
+				_syncProxy.sendRPCRequest(applinkinfo);
+			} catch (SyncException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			/*
+			 * try {
+			 * 
+			 * _syncProxy.show("AppLink info",
+			 * "AppLink is a Ford's sdk, Designed to develop AppLink enabled Application for Ford's car!"
+			 * , TextAlignment.LEFT_ALIGNED, nextCorrID()); } catch
+			 * (SyncException e) { // TODO Auto-generated catch block
+			 * e.printStackTrace(); }
+			 */
+		} else if (notification.getCustomButtonName().equals(106)) {
+			Alert alert = new Alert();
+			alert.setAlertText1("Command Information");
+			alert.setAlertText2("");
+			alert.setDuration(3000);
+			alert.setCorrelationID(nextCorrID());
+			Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
+			ttsChunks
+					.add(TTSChunkFactory
+							.createChunk(
+									SpeechCapabilities.TEXT,
+									"Four Main Commands are available in this Music application. Apart from Play and pause commands. +"
+											+ "There are Next, Previous, Seek forward and Seek Backward commands are vailable as well. These commmands are also available in Voice recognition and Sub Menu CMD forms"));
+			alert.setTtsChunks(ttsChunks);
+			try {
+				_syncProxy.sendRPCRequest(alert);
+			} catch (SyncException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else if (notification.getCustomButtonName().equals(107)) {
+			String scrollableMessageBody = new String(
+					"This is Applink enabled Application. This Player has Voice command. User can give voice command to operate this player. Available Voice commands are Play, Pause, Next, Previous, Backward and forwards");
+			ScrollableMessage scrllMsg = new ScrollableMessage();
+			scrllMsg.setCorrelationID(nextCorrID());
+			scrllMsg.setTimeout(30000);
+			scrllMsg.setScrollableMessageBody(scrollableMessageBody);
+
+			try {
+				_syncProxy.sendRPCRequest(scrllMsg);
+			} catch (SyncException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else if (notification.getCustomButtonName().equals(108)) {
+			// PerformVoiceRecordingInteraction();
+			// new PerformAudioPassThruClass();
+			PerformAudioPassThruClass.getInstance(ProxyService.this).show();
+		} else if (notification.getCustomButtonName().equals(109)) {
+			Vector<String> str = new Vector<String>();
+			str.add("Slider");
+			str.add("Test");
+			str.add("Footer");
+			Slider slider = new Slider();
+			slider.setCorrelationID(5001);
+			slider.setNumTicks(3);
+			slider.setPosition(3);
+			slider.setSliderHeader("SLider Test");
+			slider.setSliderFooter(str);
+			slider.setTimeout(5000);
+
+			try {
+				_syncProxy.sendRPCRequest(slider);
+				_syncProxy.show("Slider", "Coming Soon",
+						TextAlignment.CENTERED, nextCorrID());
+			} catch (SyncException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}
 
 	}
 
 	@Override
 	public void onOnCommand(OnCommand notification) {
 		// TODO Auto-generated method stub
-		//Handling Menu Events
+		// Handling Menu Events
 		handlingMenuCommandEvents(notification);
-		
-		//Handling voice command
+
+		// Handling voice command
 		handlingVoiceCommandForSync(notification);
-	
+
 	}
 
 	@Override
 	public void onOnPermissionsChange(OnPermissionsChange arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public void onPerformInteractionResponse(PerformInteractionResponse interactionResponse) {
+	public void onPerformInteractionResponse(
+			PerformInteractionResponse interactionResponse) {
 		// TODO Auto-generated method stub
 		perfomChoiceSetSelection(interactionResponse);
 	}
-
-	
 
 	@Override
 	public void onResetGlobalPropertiesResponse(
 			ResetGlobalPropertiesResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onSetGlobalPropertiesResponse(SetGlobalPropertiesResponse arg0) {
 		// TODO Auto-generated method stub
 		SetGlobalPropertiesResponse sgpd = new SetGlobalPropertiesResponse();
-		
-		//_syncProxy.resetGlobalProperties(properties, nextCorrID());
-		
+
+		// _syncProxy.resetGlobalProperties(properties, nextCorrID());
+
 	}
 
 	@Override
 	public void onSetMediaClockTimerResponse(SetMediaClockTimerResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onShowResponse(ShowResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onSpeakResponse(SpeakResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onSubscribeButtonResponse(SubscribeButtonResponse response) {
 		// TODO Auto-generated method stub
-		 Log.i(TAG, "" + response);
+		Log.i(TAG, "" + response);
 	}
 
 	@Override
 	public void onUnsubscribeButtonResponse(UnsubscribeButtonResponse response) {
 		// TODO Auto-generated method stub
-		 Log.i(TAG, "" + response);
+		Log.i(TAG, "" + response);
 	}
 
 	@Override
 	public void onOnDriverDistraction(OnDriverDistraction notification) {
 		// TODO Auto-generated method stub
 		driverdistrationNotif = true;
-		//Log.i(TAG, "dd: " + notification.getStringState());
-		if (notification.getState() == DriverDistractionState.DD_OFF)
-		{
-			Log.i(TAG,"clear lock, DD_OFF");
+		// Log.i(TAG, "dd: " + notification.getStringState());
+		if (notification.getState() == DriverDistractionState.DD_OFF) {
+			Log.i(TAG, "clear lock, DD_OFF");
 			clearlockscreen();
 		} else {
-			Log.i(TAG,"show lockscreen, DD_ON");
+			Log.i(TAG, "show lockscreen, DD_ON");
 			showLockScreen();
 		}
-		
+
 	}
 
-	/*@Override
-	public void onOnEncodedSyncPData(OnEncodedSyncPData arg0) {
-		// TODO Auto-generated method stub
-		
-	}*/
+	/*
+	 * @Override public void onOnEncodedSyncPData(OnEncodedSyncPData arg0) { //
+	 * TODO Auto-generated method stub
+	 * 
+	 * }
+	 */
 
-	/*@Override
-	public void onOnTBTClientState(OnTBTClientState arg0) {
-		// TODO Auto-generated method stub
-		
-	}*/
-	
+	/*
+	 * @Override public void onOnTBTClientState(OnTBTClientState arg0) { // TODO
+	 * Auto-generated method stub
+	 * 
+	 * }
+	 */
+
 	@Override
 	public IBinder onBind(Intent intent) {
 		// TODO Auto-generated method stub
 		return new Binder();
 	}
-	
-	private void initializeSubMenuCommandForSyncPlayer(){
-		try{
+
+	private void initializeSubMenuCommandForSyncPlayer() {
+		try {
 			String mnPlayCmd = new String("Play Song");
 			_syncProxy.addCommand(100, mnPlayCmd, nextCorrID());
 			String mnPauseCmd = new String("Pause Song");
@@ -927,15 +962,16 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			_syncProxy.addCommand(104, mnSeekBackwardCmd, nextCorrID());
 			String mnSeekForwardCmd = new String("Seek Forward");
 			_syncProxy.addCommand(105, mnSeekForwardCmd, nextCorrID());
-			
-		}catch(SyncException e){
-			Log.e(TAG+"Error in initializing MenuCMD", e.toString());
+
+		} catch (SyncException e) {
+			Log.e(TAG + "Error in initializing MenuCMD", e.toString());
 		}
 
 	}
-	private void handlingMenuCommandEvents(OnCommand notification){
-		
-		switch (notification.getCmdID()) {	
+
+	private void handlingMenuCommandEvents(OnCommand notification) {
+
+		switch (notification.getCmdID()) {
 		case 100:
 			_mainInstance.syncPlayer.start();
 			break;
@@ -959,8 +995,8 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			break;
 		}
 	}
-	
-	private void handlingVoiceCommandForSync(OnCommand notification){
+
+	private void handlingVoiceCommandForSync(OnCommand notification) {
 		switch (notification.getCmdID()) {
 		case 1002:
 			_mainInstance.syncPlayer.start();
@@ -980,83 +1016,89 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		case 1007:
 			_mainInstance.seekForwardCurrentPlayingSong();
 			break;
-		case 1008:   // for Choice set
+		case 1008: // for Choice set
 			PerformInteraction();
 			break;
-		case 1009:   // for text to speech
+		case 1009: // for text to speech
 			PerformTTsInteraction();
 			break;
 		default:
 			break;
 		}
 	}
-	
-	private void createInteractionChoiceSet(){
+
+	private void createInteractionChoiceSet() {
 		int i;
 		Vector<Choice> choiceVector = new Vector<Choice>();
-			
+
 		SongsManager mgr = new SongsManager();
 		songsList = mgr.getPlayList();
-		for(i = 0; i <songsList.size(); i++){
-		
+		for (i = 0; i < songsList.size(); i++) {
+
 			Choice choice1 = new Choice();
 			choice1.setChoiceID(i);
-			//choice1.setMenuName("Track Number" +i);
-			//Displaying song title as Interaction choice set displayable
+			// choice1.setMenuName("Track Number" +i);
+			// Displaying song title as Interaction choice set displayable
 			choice1.setMenuName(songsList.get(i).get("songTitle"));
-			choice1.setVrCommands(new Vector<String>(Arrays.asList(new String[]{songsList.get(i).get("songTitle"),"Track "+i})));
+			choice1.setVrCommands(new Vector<String>(Arrays
+					.asList(new String[] { songsList.get(i).get("songTitle"),
+							"Track " + i })));
 			choiceVector.addElement(choice1);
-			
+
 		}
 		lastIndexOfSongChoiceId = i;
 		setLastIndexOfSongChoiceId(lastIndexOfSongChoiceId);
 		RPCMessage trackMsg;
-		trackMsg = RPCRequestFactory.buildCreateInteractionChoiceSet(choiceVector, nextInteractionChoiceCorrID(), nextCorrID());
-		
+		trackMsg = RPCRequestFactory.buildCreateInteractionChoiceSet(
+				choiceVector, nextInteractionChoiceCorrID(), nextCorrID());
+
 		try {
 			_syncProxy.sendRPCRequest((RPCRequest) trackMsg);
-			
+
 		} catch (SyncException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		//Choice set for Info to be used TTS and TTs chunk
-			Vector<Choice> ttsVector = new Vector<Choice>();
-			Choice choice1 = new Choice();
-			choice1.setChoiceID(lastIndexOfSongChoiceId+1);
-			choice1.setMenuName("Info1");
-			choice1.setVrCommands(new Vector<String>(Arrays.asList(new String[]{"Application"})));
-			ttsVector.addElement(choice1);
-			
 
-			Choice choice2 = new Choice();
-			choice2.setChoiceID(lastIndexOfSongChoiceId+2);
-			choice2.setMenuName("Info2");
-			choice2.setVrCommands(new Vector<String>(Arrays.asList(new String[]{"Features"})));
-			ttsVector.addElement(choice2);
-			
+		// Choice set for Info to be used TTS and TTs chunk
+		Vector<Choice> ttsVector = new Vector<Choice>();
+		Choice choice1 = new Choice();
+		choice1.setChoiceID(lastIndexOfSongChoiceId + 1);
+		choice1.setMenuName("Info1");
+		choice1.setVrCommands(new Vector<String>(Arrays
+				.asList(new String[] { "Application" })));
+		ttsVector.addElement(choice1);
 
-			Choice choice3 = new Choice();
-			choice3.setChoiceID(lastIndexOfSongChoiceId+3);
-			choice3.setMenuName("Info3");
-			choice3.setVrCommands(new Vector<String>(Arrays.asList(new String[]{"Applink"})));
-			ttsVector.addElement(choice3);
-			
-			RPCMessage infoMsg;
-			infoMsg = RPCRequestFactory.buildCreateInteractionChoiceSet(ttsVector, nextInteractionChoiceCorrID(), nextCorrID());
-			try {
-				_syncProxy.sendRPCRequest((RPCRequest) infoMsg);
-				
-			} catch (SyncException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		
+		Choice choice2 = new Choice();
+		choice2.setChoiceID(lastIndexOfSongChoiceId + 2);
+		choice2.setMenuName("Info2");
+		choice2.setVrCommands(new Vector<String>(Arrays
+				.asList(new String[] { "Features" })));
+		ttsVector.addElement(choice2);
+
+		Choice choice3 = new Choice();
+		choice3.setChoiceID(lastIndexOfSongChoiceId + 3);
+		choice3.setMenuName("Info3");
+		choice3.setVrCommands(new Vector<String>(Arrays
+				.asList(new String[] { "Applink" })));
+		ttsVector.addElement(choice3);
+
+		RPCMessage infoMsg;
+		infoMsg = RPCRequestFactory.buildCreateInteractionChoiceSet(ttsVector,
+				nextInteractionChoiceCorrID(), nextCorrID());
+		try {
+			_syncProxy.sendRPCRequest((RPCRequest) infoMsg);
+
+		} catch (SyncException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
-	
-	private void PerformInteraction(){
-		Vector<TTSChunk> initChunks = TTSChunkFactory.createSimpleTTSChunks("Say track number, or, song title");
+
+	private void PerformInteraction() {
+		Vector<TTSChunk> initChunks = TTSChunkFactory
+				.createSimpleTTSChunks("Say track number, or, song title");
 		Vector<TTSChunk> helpChunks = TTSChunkFactory
 				.createSimpleTTSChunks("Please Select a song");
 		Vector<TTSChunk> timeoutChunks = TTSChunkFactory
@@ -1064,18 +1106,21 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		Vector<Integer> interactionChoiceSetIdList = new Vector<Integer>();
 		interactionChoiceSetIdList.addElement(1031);
 		RPCMessage req;
-		req = RPCRequestFactory.buildPerformInteraction(initChunks, "Available Tracks", interactionChoiceSetIdList, helpChunks, timeoutChunks, InteractionMode.VR_ONLY, 10000, nextCorrID());
+		req = RPCRequestFactory.buildPerformInteraction(initChunks,
+				"Available Tracks", interactionChoiceSetIdList, helpChunks,
+				timeoutChunks, InteractionMode.VR_ONLY, 10000, nextCorrID());
 		try {
 			_syncProxy.sendRPCRequest((RPCRequest) req);
 		} catch (SyncException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 	}
-	
-	private void PerformTTsInteraction(){
-		Vector<TTSChunk> initChunks = TTSChunkFactory.createSimpleTTSChunks("Available voice commands under info are, Features, Application, and, Applink");
+
+	private void PerformTTsInteraction() {
+		Vector<TTSChunk> initChunks = TTSChunkFactory
+				.createSimpleTTSChunks("Available voice commands under info are, Features, Application, and, Applink");
 		Vector<TTSChunk> helpChunks = TTSChunkFactory
 				.createSimpleTTSChunks("Please Select your option");
 		Vector<TTSChunk> timeoutChunks = TTSChunkFactory
@@ -1083,45 +1128,53 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		Vector<Integer> interactionChoiceSetIdList = new Vector<Integer>();
 		interactionChoiceSetIdList.addElement(1032);
 		RPCMessage req;
-		req = RPCRequestFactory.buildPerformInteraction(initChunks, "Get Information", interactionChoiceSetIdList, helpChunks, timeoutChunks, InteractionMode.VR_ONLY, 10000, nextCorrID());
+		req = RPCRequestFactory.buildPerformInteraction(initChunks,
+				"Get Information", interactionChoiceSetIdList, helpChunks,
+				timeoutChunks, InteractionMode.VR_ONLY, 10000, nextCorrID());
 		try {
 			_syncProxy.sendRPCRequest((RPCRequest) req);
 		} catch (SyncException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 	}
-	
-	private void perfomChoiceSetSelection(PerformInteractionResponse interactionResponse){
+
+	private void perfomChoiceSetSelection(
+			PerformInteractionResponse interactionResponse) {
 		Speak msg = new Speak();
 		int choice = interactionResponse.getChoiceID();
 		Vector<TTSChunk> chunks = new Vector<TTSChunk>();
-		if(choice == getLastIndexOfSongChoiceId()+1){
+		if (choice == getLastIndexOfSongChoiceId() + 1) {
 			String applicationInfo = "This is a media Application";
-			if(applicationInfo.length() > 0){
-				chunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT, applicationInfo));
-				
+			if (applicationInfo.length() > 0) {
+				chunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
+						applicationInfo));
+
 			}
-			
-		}else if(choice == getLastIndexOfSongChoiceId()+2){
+
+		} else if (choice == getLastIndexOfSongChoiceId() + 2) {
 			String features = "This app has voice and Buttons press capabilities";
-			if(features.length() > 0){
-				chunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT, features));
-				
+			if (features.length() > 0) {
+				chunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
+						features));
+
 			}
-			
-			
-		}else if(choice == getLastIndexOfSongChoiceId()+3 ){
+
+		} else if (choice == getLastIndexOfSongChoiceId() + 3) {
 			String appLink = "Applink is a ford Api to develope appLink enabled App";
-			if(appLink.length() > 0){
-				//chunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT, appLink));
-				chunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT, appLink));
+			if (appLink.length() > 0) {
+				// chunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
+				// appLink));
+				chunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
+						appLink));
 			}
 		} else {
+			Log.i("proxy service", " In choice mOd" + choice);
+
 			_mainInstance.playCurrentSong(choice);
 		}
-		
+
 		msg.setTtsChunks(chunks);
 		msg.setCorrelationID(nextCorrID());
 		try {
@@ -1131,39 +1184,38 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			e.printStackTrace();
 			Log.e(TAG, e.toString());
 		}
-			
+
 	}
 
 	@Override
-	/*public void onAlertManeuverResponse(AlertManeuverResponse arg0) {
-		// TODO Auto-generated method stub
-		
-	}*/
-
-	//@Override
+	/*
+	 * public void onAlertManeuverResponse(AlertManeuverResponse arg0) { // TODO
+	 * Auto-generated method stub
+	 * 
+	 * }
+	 */
+	// @Override
 	public void onChangeRegistrationResponse(ChangeRegistrationResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onDeleteFileResponse(DeleteFileResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onDialNumberResponse(DialNumberResponse arg0) {
 		// TODO Auto-generated method stub
-		
-	}
 
-	
+	}
 
 	@Override
 	public void onGetDTCsResponse(GetDTCsResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -1175,28 +1227,29 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onListFilesResponse(ListFilesResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onOnAudioPassThru(OnAudioPassThru notification) {
 		// TODO Auto-generated method stub
-		Log.i("OnAudioPassThruNotif", "-"+notification.toString());
+		Log.i("OnAudioPassThruNotif", "-" + notification.toString());
 
 		final byte[] aptData = notification.getAPTData();
 		SyncMainActivity.getInstance().runOnUiThread(new Runnable() {
 			@Override
-		public void run() {
-		RecordingAudio.getInstance().audioPassThru(aptData);
+			public void run() {
+				RecordingAudio.getInstance().audioPassThru(aptData);
 			}
 		});
-		
+
 	}
-	
+
 	@Override
-	public void onPerformAudioPassThruResponse(PerformAudioPassThruResponse response) {
+	public void onPerformAudioPassThruResponse(
+			PerformAudioPassThruResponse response) {
 		// TODO Auto-generated method stub
-		Log.i("PerformAudioPassThru", "-"+response);
+		Log.i("PerformAudioPassThru", "-" + response);
 
 		final Result result = response.getResultCode();
 		SyncMainActivity.getInstance().runOnUiThread(new Runnable() {
@@ -1206,14 +1259,14 @@ public class ProxyService extends Service implements IProxyListenerALM {
 						result);
 			}
 		});
-		
+
 	}
-	
+
 	@Override
 	public void onEndAudioPassThruResponse(EndAudioPassThruResponse response) {
 		// TODO Auto-generated method stub
-		
-		Log.i("EndAudioPassThru", "-"+response.toString());
+
+		Log.i("EndAudioPassThru", "-" + response.toString());
 
 		final SyncMainActivity mainActivity = SyncMainActivity.getInstance();
 		final Result result = response.getResultCode();
@@ -1223,70 +1276,72 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				RecordingAudio.getInstance().endAudioPassThruResponse(result);
 			}
 		});
-		
+
 	}
 
 	@Override
 	public void onOnLanguageChange(OnLanguageChange arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onOnVehicleData(OnVehicleData arg0) {
 		// TODO Auto-generated method stub
-		
-	}
 
-	
+	}
 
 	@Override
 	public void onPutFileResponse(PutFileResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onReadDIDResponse(ReadDIDResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public void onScrollableMessageResponse(ScrollableMessageResponse scrollResponse) {
+	public void onScrollableMessageResponse(
+			ScrollableMessageResponse scrollResponse) {
 		// TODO Auto-generated method stub
-		Log.i("Scroll Response", ""+scrollResponse.toString());
+		Log.i("Scroll Response", "" + scrollResponse.toString());
 	}
 
 	@Override
 	public void onSetAppIconResponse(SetAppIconResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onSetDisplayLayoutResponse(SetDisplayLayoutResponse arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
-	//@Override
-	/*public void onShowConstantTBTResponse(ShowConstantTBTResponse arg0) {
-		// TODO Auto-generated method stub
-		
-	}*/
+	// @Override
+	/*
+	 * public void onShowConstantTBTResponse(ShowConstantTBTResponse arg0) { //
+	 * TODO Auto-generated method stub
+	 * 
+	 * }
+	 */
 
 	@Override
 	public void onSliderResponse(SliderResponse sliderRes) {
 		// TODO Auto-generated method stub
-		Log.i("Slider", ""+sliderRes);
+		Log.i("Slider", "" + sliderRes);
 	}
 
 	@Override
-	public void onSubscribeVehicleDataResponse(SubscribeVehicleDataResponse response) {
+	public void onSubscribeVehicleDataResponse(
+			SubscribeVehicleDataResponse response) {
 		// TODO Auto-generated method stub
 		Log.i("onSubscribeVehicledata", response.toString());
-		
+
 	}
 
 	@Override
@@ -1294,146 +1349,142 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			UnsubscribeVehicleDataResponse response) {
 		// TODO Auto-generated method stub
 		Log.i("onUnSubscribeVehicledata", response.toString());
-		
+
 	}
 
-	/*@Override
-	public void onUpdateTurnListResponse(UpdateTurnListResponse arg0) {
-		// TODO Auto-generated method stub
-		
-	}*/
+	/*
+	 * @Override public void onUpdateTurnListResponse(UpdateTurnListResponse
+	 * arg0) { // TODO Auto-generated method stub
+	 * 
+	 * }
+	 */
 
-	private void showSoftButtonsOnScreen(){
+	private void showSoftButtonsOnScreen() {
 		next = new SoftButton();
 		next.setText("Next");
 		next.setSoftButtonID(100);
 		next.setType(SoftButtonType.SBT_TEXT);
 		next.setSystemAction(SystemAction.DEFAULT_ACTION);
-		
+
 		previous = new SoftButton();
 		previous.setText("Previous");
 		previous.setSoftButtonID(101);
 		previous.setType(SoftButtonType.SBT_TEXT);
 		previous.setSystemAction(SystemAction.DEFAULT_ACTION);
-		
-		/*forward = new SoftButton();
-		forward.setText("Forward");
-		forward.setSoftButtonID(102);
-		forward.setType(SoftButtonType.SBT_TEXT);
-		forward.setSystemAction(SystemAction.DEFAULT_ACTION);
-		
-		backward = new SoftButton();
-		backward.setText("Backward");
-		backward.setSoftButtonID(103);
-		backward.setType(SoftButtonType.SBT_TEXT);
-		backward.setSystemAction(SystemAction.DEFAULT_ACTION);*/
-		
-		//AppInfo
+
+		/*
+		 * forward = new SoftButton(); forward.setText("Forward");
+		 * forward.setSoftButtonID(102);
+		 * forward.setType(SoftButtonType.SBT_TEXT);
+		 * forward.setSystemAction(SystemAction.DEFAULT_ACTION);
+		 * 
+		 * backward = new SoftButton(); backward.setText("Backward");
+		 * backward.setSoftButtonID(103);
+		 * backward.setType(SoftButtonType.SBT_TEXT);
+		 * backward.setSystemAction(SystemAction.DEFAULT_ACTION);
+		 */
+
+		// AppInfo
 		appInfo = new SoftButton();
 		appInfo.setText("AppInfo");
 		appInfo.setSoftButtonID(104);
 		appInfo.setType(SoftButtonType.SBT_TEXT);
 		appInfo.setSystemAction(SystemAction.DEFAULT_ACTION);
-		
+
 		applinkInfo = new SoftButton();
 		applinkInfo.setText("ApplinkInfo");
 		applinkInfo.setSoftButtonID(105);
 		applinkInfo.setType(SoftButtonType.SBT_TEXT);
 		applinkInfo.setSystemAction(SystemAction.DEFAULT_ACTION);
-		
+
 		cmdInfo = new SoftButton();
 		cmdInfo.setText("CommandInfo");
 		cmdInfo.setSoftButtonID(106);
 		cmdInfo.setType(SoftButtonType.SBT_TEXT);
 		cmdInfo.setSystemAction(SystemAction.DEFAULT_ACTION);
-		
+
 		scrollableMsg = new SoftButton();
 		scrollableMsg.setText("Help");
 		scrollableMsg.setSoftButtonID(107);
 		scrollableMsg.setType(SoftButtonType.SBT_TEXT);
 		scrollableMsg.setSystemAction(SystemAction.DEFAULT_ACTION);
-		
+
 		APTHCheck = new SoftButton();
 		APTHCheck.setText("Record");
 		APTHCheck.setSoftButtonID(108);
 		APTHCheck.setType(SoftButtonType.SBT_TEXT);
 		APTHCheck.setSystemAction(SystemAction.DEFAULT_ACTION);
-		
+
 		vehicleData = new SoftButton();
 		vehicleData.setText("Vehicle");
 		vehicleData.setSoftButtonID(109);
 		vehicleData.setType(SoftButtonType.SBT_TEXT);
 		vehicleData.setSystemAction(SystemAction.DEFAULT_ACTION);
-		
-		
-		
-		
-		//Send Show RPC:
-		      Vector<SoftButton> buttons = new Vector<SoftButton>();
-				buttons.add(next);
-				buttons.add(previous);
-				//buttons.add(forward);
-				//buttons.add(backward);
-				buttons.add(appInfo);
-				buttons.add(applinkInfo);
-				buttons.add(cmdInfo);
-				buttons.add(scrollableMsg);
-				buttons.add(APTHCheck);
-				buttons.add(vehicleData);
-				try {
-					_syncProxy.show("", "",
-							"", "", null, buttons, null,
-							null, nextCorrID());
-				} catch (SyncException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-	}
-	
-	public void showLockScreen() {
-		//only throw up lockscreen if main activity is currently on top
-		//else, wait until onResume() to throw lockscreen so it doesn't 
-		//pop-up while a user is using another app on the phone
-		if(_mainInstance != null) {
-			if(_mainInstance.isActivityonTop() == true){
-				if(LockScreenActivity.getInstance() == null) {
-					Intent i = new Intent(this, LockScreenActivity.class);
-					i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-					i.addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
-					startActivity(i);
-				}
-			}
-		}
-		lockscreenUP = true;		
-	}
 
-	private void clearlockscreen() {
-		if(LockScreenActivity.getInstance() != null) {  
-			LockScreenActivity.getInstance().exit();
-		}
-		lockscreenUP = false;
-	}
-	public boolean getLockScreenStatus() {
-		return lockscreenUP;
-		}
-	
-	/*private void PerformVoiceRecordingInteraction(){
-		Alert alert = new Alert();
-		alert.setAlertText1("Voice Recording");
-		alert.setAlertText2("Start in 3 seconds");
-		alert.setDuration(3000);
-		alert.setCorrelationID(nextCorrID());
-		Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-		ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-				"Speak to SYNC microphone to record! "));
-		alert.setTtsChunks(ttsChunks);
+		// Send Show RPC:
+		Vector<SoftButton> buttons = new Vector<SoftButton>();
+		buttons.add(next);
+		buttons.add(previous);
+		// buttons.add(forward);
+		// buttons.add(backward);
+		buttons.add(appInfo);
+		buttons.add(applinkInfo);
+		buttons.add(cmdInfo);
+		buttons.add(scrollableMsg);
+		buttons.add(APTHCheck);
+		buttons.add(vehicleData);
 		try {
-			_syncProxy.sendRPCRequest(alert);
+			_syncProxy.show("", "", "", "", null, buttons, null, null,
+					nextCorrID());
 		} catch (SyncException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-	}*/
-	
+	}
+
+	public void showLockScreen() {
+		// only throw up lockscreen if main activity is currently on top
+		// else, wait until onResume() to throw lockscreen so it doesn't
+		// pop-up while a user is using another app on the phone
+		if (_mainInstance != null) {
+
+			if (LockScreenActivity.getInstance() == null) {
+				Intent i = new Intent(this, LockScreenActivity.class);
+				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				i.addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+				startActivity(i);
+
+			}
+		}
+
+		lockscreenUP = true;
+	}
+
+	private void clearlockscreen() {
+		if (LockScreenActivity.getInstance() != null) {
+			// LockScreenActivity.getInstance().exit();
+			Log.i("LOckScreen", "Calling");
+			LockScreenActivity.getInstance().finish();
+		}
+		lockscreenUP = false;
+	}
+
+	public boolean getLockScreenStatus() {
+		return lockscreenUP;
+	}
+
+	/*
+	 * private void PerformVoiceRecordingInteraction(){ Alert alert = new
+	 * Alert(); alert.setAlertText1("Voice Recording");
+	 * alert.setAlertText2("Start in 3 seconds"); alert.setDuration(3000);
+	 * alert.setCorrelationID(nextCorrID()); Vector<TTSChunk> ttsChunks = new
+	 * Vector<TTSChunk>();
+	 * ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
+	 * "Speak to SYNC microphone to record! ")); alert.setTtsChunks(ttsChunks);
+	 * try { _syncProxy.sendRPCRequest(alert); } catch (SyncException e) { //
+	 * TODO Auto-generated catch block e.printStackTrace(); }
+	 * 
+	 * }
+	 */
+
 }

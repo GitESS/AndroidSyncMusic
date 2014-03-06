@@ -62,8 +62,8 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 	private Handler mHandler = new Handler();;
 	private SongsManager _songManager;
 	private Utilities utils;
-	private int seekForwardTime = 30000; // 5000 milliseconds
-	private int seekBackwardTime = 30000; // 5000 milliseconds
+	private int seekForwardTime = 100000; // 5000 milliseconds
+	private int seekBackwardTime = 100000; // 5000 milliseconds
 	private int currentSongIndex = 0; 
 	//private int currentIndex;
 	private boolean isShuffle = false;
@@ -464,30 +464,30 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 	 * Blocked else part to check number sequence error
 	 * currently making it work on 0 - 9 only
 	 * **/
-	public void playTrackNumber(final int trackNo){
-		trackNumber = currentSongIndex;
-		if((trackNo > -1) && (trackNo <=9)){
-			playCurrentSong(trackNo);
-		} else {
-			new Handler().postDelayed(new Runnable() {
-				
-				@Override
-				public void run() {
-					// TODO Auto-generated method stub
-					
-					trackNumber = ((trackNo * 10) + trackNo);
-					playCurrentSong(trackNumber);
-				}
-			}, 5000);
-		}
-		
-	}
+//	public void playTrackNumber(final int trackNo){
+//		trackNumber = currentSongIndex;
+//		if((trackNo > -1) && (trackNo <=9)){
+//			playCurrentSong(trackNo);
+//		} else {
+//			new Handler().postDelayed(new Runnable() {
+//				
+//				@Override
+//				public void run() {
+//					// TODO Auto-generated method stub
+//					
+//					trackNumber = ((trackNo * 10) + trackNo);
+//					playCurrentSong(trackNumber);
+//				}
+//			}, 5000);
+//		}
+//		
+//	}
 	
 	
 	
 	public void playCurrentSong(int songIndex) {
 		//Capturing the current song number
-		setCurrentPlayingSongIndex(songIndex);
+	//	setCurrentPlayingSongIndex(songIndex);
 		// Play song
 		if (songsList.size() > -1) {
 			try {
