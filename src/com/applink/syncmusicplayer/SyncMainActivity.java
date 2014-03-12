@@ -62,8 +62,8 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 	private Handler mHandler = new Handler();;
 	private SongsManager _songManager;
 	private Utilities utils;
-	private int seekForwardTime = 100000; // 5000 milliseconds
-	private int seekBackwardTime = 100000; // 5000 milliseconds
+	private int seekForwardTime = 10000; // 5000 milliseconds
+	private int seekBackwardTime = 10000; // 5000 milliseconds
 	private int currentSongIndex = 0; 
 	//private int currentIndex;
 	private boolean isShuffle = false;
@@ -402,11 +402,14 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 	public void seekBackwardCurrentPlayingSong(){
 		// get current song position				
 		int currentPosition = syncPlayer.getCurrentPosition();
+		Log.i("Backward-currentPos", ""+currentPosition);
 		// check if seekBackward time is greater than 0 sec
 		if(currentPosition - seekBackwardTime >= 0){
-			// forward song
+			Log.i("If-Backward ", "Control");
+			// Backward song
 			syncPlayer.seekTo(currentPosition - seekBackwardTime);
 		}else{
+			Log.i("else-Backward ", "Control");
 			// backward to starting position
 			syncPlayer.seekTo(0);
 		}
@@ -416,12 +419,15 @@ public class SyncMainActivity extends Activity implements OnCompletionListener, 
 		
 		// get current song position				
 		int currentPosition = syncPlayer.getCurrentPosition();
+		Log.i("Forwardward-currentPos", ""+currentPosition);
 		// check if seekForward time is lesser than song duration
 		if(currentPosition + seekForwardTime <= syncPlayer.getDuration()){
+			Log.i("If-Forward ", "Control");
 			// forward song
 			syncPlayer.seekTo(currentPosition + seekForwardTime);
 		}else{
 			// forward to end position
+			Log.i("Else-Forward ", "Control");
 			syncPlayer.seekTo(syncPlayer.getDuration());
 		}
 	}
