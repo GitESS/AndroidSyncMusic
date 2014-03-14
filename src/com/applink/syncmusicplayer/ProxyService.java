@@ -128,12 +128,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		Toast.makeText(getApplicationContext(),
 				"Control is on OnCreate if Service is not created, Create it",
 				Toast.LENGTH_SHORT).show();
-		// IntentFilter mediaIntentFilter = new IntentFilter();
-		// mediaIntentFilter.addAction(Intent.ACTION_MEDIA_BUTTON);
-		//
-		// mediaButtonReceiver = new SyncReceiver();
-		// registerReceiver(mediaButtonReceiver, mediaIntentFilter);
-
+		
 		Log.i(TAG, "ProxyService.onCreate()");
 		_instance = this;
 	}
@@ -143,9 +138,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		Log.i(TAG, "ProxyService.onStartCommand()");
 		Toast.makeText(getApplicationContext(), "Control is on OnStartCommand",
 				Toast.LENGTH_SHORT).show();
-		// startProxyIfNetworkConnected();
-		//
-		// setCurrentActivity(SyncMainActivity.getInstance());
 		mBtAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (mBtAdapter != null) {
 			if (mBtAdapter.isEnabled()) {
@@ -186,26 +178,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		return interactionChoiceSetID;
 	}
 
-	// public void startProxyIfNetworkConnected(){
-	// Log.i(TAG, "startProxyIfNetworkConnected()");
-	// final SharedPreferences prefs = getSharedPreferences(Const.PREFS_NAME,
-	// MODE_PRIVATE);
-	// final int transportType =
-	// prefs.getInt(Const.Transport.PREFS_KEY_TRANSPORT_TYPE,
-	// Const.Transport.PREFS_DEFAULT_TRANSPORT_TYPE);
-	//
-	// if (transportType == Const.Transport.KEY_BLUETOOTH) {
-	// Log.d(TAG, "ProxyService. onStartCommand(). Transport = Bluetooth.");
-	// mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-	// if (mBtAdapter != null) {
-	// if (mBtAdapter.isEnabled()) {
-	// startProxy();
-	// }
-	// }
-	// } else {
-	// startProxy();
-	// }
-	// }
+	
 
 	public void startProxy() {
 		Log.i(TAG, "ProxyService.startProxy()");
@@ -266,7 +239,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		_instance = null;
 		if (_mainInstance.syncPlayer != null)
 			_mainInstance.syncPlayer.release();
-		// unregisterReceiver(mediaButtonReceiver);
 		super.onDestroy();
 
 	}
@@ -313,28 +285,21 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	private void initializeTheApp() {
 
 		playingAudio = true;
-		// showLockScreen();
-		// _mainInstance.playCurrentSong(0);
-		// whenever HMI STATUS will FULL, 1st song os list will play.
-
+		
 		// ButtonSubscriptions
 		initializeButtonsToBeSubscribed();
-
 		// softButtons Implementation
 		showSoftButtonsOnScreen();
-
-		// Menu Command
-		//initializeSubMenuCommandForSyncPlayer();
 
 		// Voice Command
 		initializeVoiceCommand();
 
+		Log.i("Indide the", "Init method4");
 		// ChoiceSet
 		createInteractionChoiceSet();
-		_mainInstance.playCurrentSong(0);
-		// _mainInstance.setCurrentPlayingSongIndex(0);
-
+		_mainInstance.playCurrentSong();
 		showLockScreen();
+		
 	}
 
 	private void initializeVoiceCommand() {
@@ -391,17 +356,17 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		case SYSCTXT_MAIN:
 			break;
 		case SYSCTXT_VRSESSION:
-			// try {
-			// initializeTheApp();
-			// } catch (Exception e) {
-			// Log.i("SyncProxy", "VRSESSION");
-			// }
+			 try {
+			 initializeTheApp();
+			 } catch (Exception e) {
+			 Log.i("SyncProxy", "VRSESSION");
+			 }
 			break;
 		case SYSCTXT_MENU:
 			try {
 				initializeTheApp();
 			} catch (Exception e) {
-				Log.i("SyncProxy", "VRSESSION");
+				Log.i("SyncProxy", "MENU");
 			}
 			break;
 		default:
@@ -409,11 +374,11 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		}
 		switch (notification.getAudioStreamingState()) {
 		case AUDIBLE:
-			// if (playingAudio)
-			// _mainInstance.playCurrentSong(0);
+			 if (playingAudio)
+			 _mainInstance.playCurrentSong();
 			break;
 		case NOT_AUDIBLE:
-			_mainInstance.pauseCurrentSong();
+			SyncMainActivity.getInstance().pauseCurrentSong();
 			break;
 		default:
 			return;
@@ -429,9 +394,8 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			if (_syncProxy.getAppInterfaceRegistered()) {
 				if (notification.getFirstRun()) {
 					try {
-						_syncProxy.show("Welcome", "Sync Music Player",
-								TextAlignment.CENTERED, nextCorrID());
-						Log.i("Inside Full",
+						_syncProxy.show("Welcome", "Sync Music Player", TextAlignment.CENTERED, nextCorrID());
+						Log.i("InFull",
 								"Before Calling initializeTheApp()");
 						initializeTheApp();
 					} catch (SyncException e) {
@@ -444,6 +408,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				try {
 					_syncProxy.show("SyncProxy", "Alive",
 							TextAlignment.CENTERED, nextCorrID());
+					initializeTheApp();
 				} catch (SyncException e) {
 					DebugTool.logError("Not Able to send Show", e);
 				}
@@ -452,11 +417,11 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			break;
 		case HMI_LIMITED:
 			Log.i("HMI_LIMITED", "HMI_LIMITED");
-
+			//initializeTheApp();
 			break;
 		case HMI_BACKGROUND:
 			Log.i("HMI_BACKGROUND", "HMI_BACKGROUND");
-			initializeTheApp();
+			//initializeTheApp();
 			break;
 		case HMI_NONE:
 			if (isFullCalled) {
@@ -497,35 +462,24 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 	public void reset() {
 
-		// if (_syncProxy != null) {
-		// try {
-		// _syncProxy.resetProxy();
-		// } catch (SyncException e1) {
-		// e1.printStackTrace();
+		 /*if (_syncProxy != null) {
+		 try {
+		 _syncProxy.resetProxy();
+		 SyncMainActivity.getInstance().finish();
+		 } catch (SyncException e1) {
+		 e1.printStackTrace();
 		// // something goes wrong, & the proxy returns as null, stop the
 		// // service.
 		// // do not want a running service with a null proxy
-		// if (_syncProxy == null) {
-		// stopSelf();
-		// }
-		// }
-		// } else {
-		// startProxy();
-		// }
+		 if (_syncProxy == null) {
+		 stopSelf();
+		 }
+		 }
+		 } else {
+		 startProxy();
+		 }*/
 
-		// try {
-		// if (_syncProxy != null)
-		// _syncProxy.resetProxy();
-		// else startProxyIfNetworkConnected();
-		// } catch (SyncException e1) {
-		// e1.printStackTrace();
-		// //something goes wrong, & the proxy returns as null, stop the
-		// service.
-		// //do not want a running service with a null proxy
-		// if (_syncProxy == null){
-		// stopSelf();
-		// }
-		// }
+	
 	}
 
 	/**
@@ -582,12 +536,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 	}
 
-	/*
-	 * @Override public void onEncodedSyncPDataResponse(EncodedSyncPDataResponse
-	 * arg0) { // TODO Auto-generated method stub
-	 * 
-	 * }
-	 */
+	
 
 	@Override
 	public void onGenericResponse(GenericResponse arg0) {
@@ -672,7 +621,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		// SongList, Song info, app info, applink info, command info
 
 		if (notification.getCustomButtonName().equals(100)) {
-			SyncMainActivity.getInstance().jumpToNextSong();
 			Alert next = new Alert();
 			next.setAlertText1("Next");
 			next.setDuration(1000);
@@ -687,9 +635,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			SyncMainActivity.getInstance().jumpToNextSong();
 
 		} else if (notification.getCustomButtonName().equals(101)) {
-			SyncMainActivity.getInstance().jumpToPreviousSong();
 			Alert previous = new Alert();
 			previous.setAlertText1("Previous");
 			previous.setDuration(1000);
@@ -704,29 +652,10 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} /*
-		 * else if (notification.getCustomButtonName().equals(102)) {
-		 * SyncMainActivity.getInstance().seekForwardCurrentPlayingSong(); Alert
-		 * forward = new Alert(); forward.setAlertText1("Forward");
-		 * forward.setDuration(1000); forward.setCorrelationID(nextCorrID());
-		 * Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-		 * ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-		 * "Seek Forward")); forward.setTtsChunks(ttsChunks); try {
-		 * _syncProxy.sendRPCRequest(forward); } catch (SyncException e) { //
-		 * TODO Auto-generated catch block e.printStackTrace(); } } else if
-		 * (notification.getCustomButtonName().equals(103)) {
-		 * SyncMainActivity.getInstance().seekBackwardCurrentPlayingSong();
-		 * Alert backward = new Alert(); backward.setAlertText1("Backward");
-		 * backward.setDuration(1000); backward.setCorrelationID(nextCorrID());
-		 * Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-		 * ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-		 * "Seek Backward")); backward.setTtsChunks(ttsChunks); try {
-		 * _syncProxy.sendRPCRequest(backward); } catch (SyncException e) { //
-		  TODO Auto-generated catch block e.printStackTrace(); } }
-		 */else if (notification.getCustomButtonName().equals(104)) {
-			 //SyncMainActivity.getInstance().seekBackwardCurrentPlayingSong();
+			SyncMainActivity.getInstance().jumpToPreviousSong();
+		}else if (notification.getCustomButtonName().equals(104)) {
 			Alert appInfo = new Alert();
-			appInfo.setAlertText1("Application Info");
+			appInfo.setAlertText1("Backward");
 			appInfo.setDuration(3000);
 			appInfo.setCorrelationID(nextCorrID());
 			Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
@@ -734,7 +663,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 					.add(TTSChunkFactory
 							.createChunk(
 									SpeechCapabilities.TEXT,
-									"This is a Applink enabled Music player App, Designed specifically for Ford's SYNC."));
+									"Backward"));
 			appInfo.setTtsChunks(ttsChunks);
 			try {
 				_syncProxy.sendRPCRequest(appInfo);
@@ -742,10 +671,11 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			SyncMainActivity.getInstance().seekBackwardCurrentPlayingSong();
 		} else if (notification.getCustomButtonName().equals(105)) {
 			//SyncMainActivity.getInstance().seekForwardCurrentPlayingSong();
 			Alert applinkinfo = new Alert();
-			applinkinfo.setAlertText1("AppLink Information");
+			applinkinfo.setAlertText1("Forward");
 			applinkinfo.setDuration(3000);
 			applinkinfo.setCorrelationID(nextCorrID());
 			Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
@@ -753,7 +683,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 					.add(TTSChunkFactory
 							.createChunk(
 									SpeechCapabilities.TEXT,
-									"AppLink is a Ford's sdk, Designed to develop AppLink enabled Application for Ford's car!"));
+									"Forward"));
 			applinkinfo.setTtsChunks(ttsChunks);
 			try {
 				_syncProxy.sendRPCRequest(applinkinfo);
@@ -761,15 +691,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			/*
-			 * try {
-			 * 
-			 * _syncProxy.show("AppLink info",
-			 * "AppLink is a Ford's sdk, Designed to develop AppLink enabled Application for Ford's car!"
-			 * , TextAlignment.LEFT_ALIGNED, nextCorrID()); } catch
-			 * (SyncException e) { // TODO Auto-generated catch block
-			 * e.printStackTrace(); }
-			 */
+			
 		} else if (notification.getCustomButtonName().equals(106)) {
 			Alert alert = new Alert();
 			alert.setAlertText1("Command Information");
@@ -792,7 +714,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			}
 		} else if (notification.getCustomButtonName().equals(107)) {
 			String scrollableMessageBody = new String(
-					"This is Applink enabled Application. This Player has Voice command. User can give voice command to operate this player. Available Voice commands are Play, Pause, Next, Previous, Backward and forwards");
+					"This is Applink enabled Application. This Player has Voice command. User can give voice command to operate this player. Available Voice commands are Play, Pause, Next, Previous, Backward and forwards. This Player has Voice command. User can give voice command to operate this player. Available Voice commands are Play, Pause, Next, Previous, Backward and forwards");
 			ScrollableMessage scrllMsg = new ScrollableMessage();
 			scrllMsg.setCorrelationID(nextCorrID());
 			scrllMsg.setTimeout(30000);
@@ -951,19 +873,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 	}
 
-	/*
-	 * @Override public void onOnEncodedSyncPData(OnEncodedSyncPData arg0) { //
-	 * TODO Auto-generated method stub
-	 * 
-	 * }
-	 */
 
-	/*
-	 * @Override public void onOnTBTClientState(OnTBTClientState arg0) { // TODO
-	 * Auto-generated method stub
-	 * 
-	 * }
-	 */
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -1410,13 +1320,13 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 		// AppInfo
 		appInfo = new SoftButton();
-		appInfo.setText("AppInfo");
+		appInfo.setText("Bkwrd");
 		appInfo.setSoftButtonID(104);
 		appInfo.setType(SoftButtonType.SBT_TEXT);
 		appInfo.setSystemAction(SystemAction.DEFAULT_ACTION);
 
 		applinkInfo = new SoftButton();
-		applinkInfo.setText("ApplinkInfo");
+		applinkInfo.setText("Frwrd");
 		applinkInfo.setSoftButtonID(105);
 		applinkInfo.setType(SoftButtonType.SBT_TEXT);
 		applinkInfo.setSystemAction(SystemAction.DEFAULT_ACTION);
@@ -1471,16 +1381,14 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		// only throw up lockscreen if main activity is currently on top
 		// else, wait until onResume() to throw lockscreen so it doesn't
 		// pop-up while a user is using another app on the phone
-		if (_mainInstance != null) {
+		Log.i("In ShowLockScreen", "control is here");
+		
+		Intent i = new Intent(this, LockScreenActivity.class);
+		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		//i.addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+		startActivity(i);
+		
 
-			if (LockScreenActivity.getInstance() == null) {
-				Intent i = new Intent(this, LockScreenActivity.class);
-				i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				i.addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
-				startActivity(i);
-
-			}
-		}
 
 		lockscreenUP = true;
 	}
@@ -1498,18 +1406,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		return lockscreenUP;
 	}
 
-	/*
-	 * private void PerformVoiceRecordingInteraction(){ Alert alert = new
-	 * Alert(); alert.setAlertText1("Voice Recording");
-	 * alert.setAlertText2("Start in 3 seconds"); alert.setDuration(3000);
-	 * alert.setCorrelationID(nextCorrID()); Vector<TTSChunk> ttsChunks = new
-	 * Vector<TTSChunk>();
-	 * ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-	 * "Speak to SYNC microphone to record! ")); alert.setTtsChunks(ttsChunks);
-	 * try { _syncProxy.sendRPCRequest(alert); } catch (SyncException e) { //
-	 * TODO Auto-generated catch block e.printStackTrace(); }
-	 * 
-	 * }
-	 */
+	
 
 }

@@ -1,8 +1,12 @@
 package com.applink.syncmusicplayer;
 
+import com.ford.syncV4.exception.SyncException;
 import com.ford.syncV4.proxy.SyncProxyALM;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -12,56 +16,75 @@ public class LockScreenActivity extends Activity {
 	int itemcmdID = 0;
 	int subMenuId = 0;
 	private static LockScreenActivity instance = null;
-	
+
 	public static LockScreenActivity getInstance() {
 		return instance;
 	}
-	
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        instance = this;
-        setContentView(R.layout.lockscreen);
-		
-		final Button resetSYNCButton = (Button)findViewById(R.id.lockreset);
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		instance = this;
+		setContentView(R.layout.lockscreen);
+
+		final Button resetSYNCButton = (Button) findViewById(R.id.lockreset);
 		resetSYNCButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				//if not already started, show main activity and end lock screen activity
-				if(SyncMainActivity.getInstance() == null) {
-					Intent i = new Intent(getBaseContext(), SyncMainActivity.class);
+				// if not already started, show main activity and end lock
+				// screen activity
+				if (SyncMainActivity.getInstance() == null) {
+					Intent i = new Intent(getBaseContext(),
+							SyncMainActivity.class);
 					i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 					getApplication().startActivity(i);
 				}
-				
-				//reset proxy; do not shut down service
+
+				// reset proxy; do not shut down service
 				ProxyService serviceInstance = ProxyService.getInstance();
-				if (serviceInstance != null){
-					SyncProxyALM proxyInstance = ProxyService.getProxyInstance();
-					if(proxyInstance != null){
+				if (serviceInstance != null) {
+					SyncProxyALM proxyInstance = ProxyService
+							.getProxyInstance();
+					if (proxyInstance != null) {
 						serviceInstance.reset();
 					} else {
 						serviceInstance.startProxy();
 					}
 				}
-				
+
 				exit();
 			}
 		});
-    }
-    
-    //disable back button on lockscreen
-    @Override
-    public void onBackPressed() {
-    }
-    
-    public void exit() {
-    	super.finish();
-    }
-    
-    public void onDestroy(){
-    	super.onDestroy();
-    	instance = null;
-    }
+	}
 
+	// disable back button on lockscreen
+	@Override
+	public void onBackPressed() {
+	}
+
+	public void exit() {
+//		SyncMainActivity.getInstance().finish();
+//		if (isMyServiceRunning()) {
+//			Intent i = new Intent(LockScreenActivity.this, ProxyService.class);
+//			stopService(i);
+//		}
+		super.finish();
+	}
+
+	public void onDestroy() {
+		super.onDestroy();
+		instance = null;
+	}
+
+	private boolean isMyServiceRunning() {
+		ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+		for (RunningServiceInfo service : manager
+				.getRunningServices(Integer.MAX_VALUE)) {
+			if (ProxyService.class.getName().equals(
+					service.service.getClassName())) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

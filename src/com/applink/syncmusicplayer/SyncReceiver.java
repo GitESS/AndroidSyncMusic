@@ -87,7 +87,7 @@ public class SyncReceiver extends BroadcastReceiver {
 			try{
 				if (mainActivityInstance != null && mainActivityInstance.syncPlayer.isPlaying()) {
 					
-						mainActivityInstance.syncPlayer.stop();
+						SyncMainActivity.getInstance().pauseCurrentSong();
 					
 				
 		}}catch(Exception e){

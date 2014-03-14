@@ -39,13 +39,13 @@ public class SongsManager {
 	 * ArrayList
 	 * */
 	public ArrayList<HashMap<String, String>> getPlayList() {
-	    System.out.println(MEDIA_PATH);
+	    //System.out.println(MEDIA_PATH);
 	    if (MEDIA_PATH != null) {
 	        File home = new File(MEDIA_PATH);
 	        File[] listFiles = home.listFiles();
 	        if (listFiles != null && listFiles.length > 0) {
 	            for (File file : listFiles) {
-	                System.out.println(file.getAbsolutePath());
+	                //System.out.println(file.getAbsolutePath());
 	                if (file.isDirectory()) {
 	                    scanDirectory(file);
 	                } else {

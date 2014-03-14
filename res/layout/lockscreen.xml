@@ -14,7 +14,7 @@
         android:layout_alignParentBottom="true"
         android:layout_centerInParent="true"
         android:layout_gravity="bottom|center_horizontal"
-        android:text="Reset SYNC connection"
+        android:text="Exit"
         android:textSize="20sp"
         android:visibility="visible" />
 
