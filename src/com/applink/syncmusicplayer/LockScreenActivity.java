@@ -1,5 +1,8 @@
 package com.applink.syncmusicplayer;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import com.ford.syncV4.exception.SyncException;
 import com.ford.syncV4.proxy.SyncProxyALM;
 
@@ -68,6 +71,10 @@ public class LockScreenActivity extends Activity {
 //			Intent i = new Intent(LockScreenActivity.this, ProxyService.class);
 //			stopService(i);
 //		}
+		if(SyncMainActivity.getInstance()==null){
+			exitApp();
+		}
+		
 		super.finish();
 	}
 
@@ -86,5 +93,15 @@ public class LockScreenActivity extends Activity {
 			}
 		}
 		return false;
+	}
+	public void exitApp() {
+		stopService(new Intent(this, ProxyService.class));
+		finish();
+		new Timer().schedule(new TimerTask() {
+			@Override
+			public void run() {
+				android.os.Process.killProcess(android.os.Process.myPid());
+			}
+		}, 1000);
 	}
 }

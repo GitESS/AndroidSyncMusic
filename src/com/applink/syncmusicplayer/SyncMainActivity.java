@@ -66,8 +66,8 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	private Handler mHandler = new Handler();;
 	private SongsManager _songManager;
 	private Utilities utils;
-	private int seekForwardTime = 10000; // 5000 milliseconds
-	private int seekBackwardTime = 10000; // 5000 milliseconds
+	private int seekForwardTime = 30000; // 5000 milliseconds
+	private int seekBackwardTime = 30000; // 5000 milliseconds
 	private int currentSongIndex = 0;
 	// private int currentIndex;
 	private boolean isShuffle = false;
@@ -102,10 +102,27 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 
 		startSyncProxy();
 		_activity = this;
+
 		// Set all player buttons
 		setAllMusicPlayerButtons();
 
 		isFirstActivityRun = false;
+
+		Bundle b;
+		b = getIntent().getExtras();
+		try {
+			String getExtraFromService = b.getString("startlock");
+			if (getExtraFromService != null) {
+				if (getExtraFromService.equalsIgnoreCase("lock")) {
+					playCurrentSong();
+					Intent i = new Intent(SyncMainActivity.this,
+							LockScreenActivity.class);
+					startActivity(i);
+				}
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 
 	}
 
