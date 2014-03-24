@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.YuvImage;
 import android.media.AudioManager;
 import android.net.Proxy;
 import android.os.Binder;
@@ -29,6 +30,7 @@ import com.ford.syncV4.proxy.interfaces.IProxyListenerALM;
 import com.ford.syncV4.proxy.rpc.AddCommandResponse;
 import com.ford.syncV4.proxy.rpc.AddSubMenuResponse;
 import com.ford.syncV4.proxy.rpc.Alert;
+import com.ford.syncV4.proxy.rpc.AlertManeuverResponse;
 import com.ford.syncV4.proxy.rpc.AlertResponse;
 import com.ford.syncV4.proxy.rpc.ChangeRegistrationResponse;
 import com.ford.syncV4.proxy.rpc.Choice;
@@ -64,6 +66,7 @@ import com.ford.syncV4.proxy.rpc.SetAppIconResponse;
 import com.ford.syncV4.proxy.rpc.SetDisplayLayoutResponse;
 import com.ford.syncV4.proxy.rpc.SetGlobalPropertiesResponse;
 import com.ford.syncV4.proxy.rpc.SetMediaClockTimerResponse;
+import com.ford.syncV4.proxy.rpc.ShowConstantTBTResponse;
 import com.ford.syncV4.proxy.rpc.ShowResponse;
 import com.ford.syncV4.proxy.rpc.Slider;
 import com.ford.syncV4.proxy.rpc.SliderResponse;
@@ -75,6 +78,7 @@ import com.ford.syncV4.proxy.rpc.SubscribeVehicleDataResponse;
 import com.ford.syncV4.proxy.rpc.TTSChunk;
 import com.ford.syncV4.proxy.rpc.UnsubscribeButtonResponse;
 import com.ford.syncV4.proxy.rpc.UnsubscribeVehicleDataResponse;
+import com.ford.syncV4.proxy.rpc.UpdateTurnListResponse;
 import com.ford.syncV4.proxy.rpc.enums.ButtonName;
 import com.ford.syncV4.proxy.rpc.enums.DriverDistractionState;
 import com.ford.syncV4.proxy.rpc.enums.InteractionMode;
@@ -99,8 +103,10 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	protected SyncReceiver mediaButtonReceiver;
 	// variable to contain the current state of the lockscreen
 	private boolean lockscreenUP = false;
-	private boolean firstHMIStatusChange = true;
-	private static boolean waitingForResponse = false;
+	/*
+	 * private boolean firstHMIStatusChange = true; private static boolean
+	 * waitingForResponse = false;
+	 */
 	private boolean driverdistrationNotif = false;
 	public int trackNumber = 1;
 	private boolean isFullCalled = false;
@@ -195,7 +201,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				int transportType = settings.getInt(
 						Const.Transport.PREFS_KEY_TRANSPORT_TYPE,
 						Const.Transport.PREFS_DEFAULT_TRANSPORT_TYPE);
-			
+
 				if (transportType == Const.Transport.KEY_BLUETOOTH) {
 					// _syncProxy = new SyncProxyALM(this, appName, isMediaApp);
 					_syncProxy = new SyncProxyALM(this, appName, isMediaApp,
@@ -262,9 +268,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		return _syncProxy;
 	}
 
-	public static void waiting(boolean waiting) {
-		waitingForResponse = waiting;
-	}
+	// public static void waiting(boolean waiting) {
+	// waitingForResponse = waiting;
+	// }
 
 	private void initializeTheApp() {
 
@@ -283,7 +289,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		showLockScreen();
 
 	}
-
 
 	private void initializeVoiceCommand() {
 		try {
@@ -486,7 +491,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 	}
 
-	
 	@Override
 	public void onError(String info, Exception e) {
 		// TODO Auto-generated method stub
@@ -502,16 +506,17 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 
 	@Override
-	public void onAlertResponse(AlertResponse arg0) {
+	public void onAlertResponse(AlertResponse alertNotif) {
 		// TODO Auto-generated method stub
-
+		Log.i("" + alertNotif.getFunctionName(), "" + alertNotif);
 	}
 
 	@Override
 	public void onCreateInteractionChoiceSetResponse(
 			CreateInteractionChoiceSetResponse interactionChoiceSetResponse) {
 		// TODO Auto-generated method stub
-
+		Log.i("" + interactionChoiceSetResponse.getFunctionName(), ""
+				+ interactionChoiceSetResponse);
 	}
 
 	@Override
@@ -616,111 +621,39 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		// SongList, Song info, app info, applink info, command info
 
 		if (notification.getCustomButtonName().equals(100)) {
-			Alert next = new Alert();
-			next.setAlertText1("Next");
-			next.setDuration(1000);
-			next.setCorrelationID(nextCorrID());
-			Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-			ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-					"Next"));
-			next.setTtsChunks(ttsChunks);
-			try {
-				_syncProxy.sendRPCRequest(next);
-			} catch (SyncException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			String msg = "Next";
+			AlertClass.getInstance(ProxyService.this).getAlert("Next", 3000, msg);
 			SyncMainActivity.getInstance().jumpToNextSong();
 
 		} else if (notification.getCustomButtonName().equals(101)) {
-			Alert previous = new Alert();
-			previous.setAlertText1("Previous");
-			previous.setDuration(1000);
-			previous.setCorrelationID(nextCorrID());
-			Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-			ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-					"Previous"));
-			previous.setTtsChunks(ttsChunks);
-			try {
-				_syncProxy.sendRPCRequest(previous);
-			} catch (SyncException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			String msg = "Previous";
+			AlertClass.getInstance(ProxyService.this).getAlert("Previous", 3000, msg);
 			SyncMainActivity.getInstance().jumpToPreviousSong();
-		} else if (notification.getCustomButtonName().equals(104)) {
-			Alert appInfo = new Alert();
-			appInfo.setAlertText1("AppInfo");
-			appInfo.setDuration(3000);
-			appInfo.setCorrelationID(nextCorrID());
-			Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-			ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-					"This is a Applink enabled music player application, designed to run on Ford's Sync. All commands of this application are Voice based."));
-			appInfo.setTtsChunks(ttsChunks);
-			try {
-				_syncProxy.sendRPCRequest(appInfo);
-			} catch (SyncException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			//SyncMainActivity.getInstance().seekBackwardCurrentPlayingSong();
-		} else if (notification.getCustomButtonName().equals(105)) {
-			// SyncMainActivity.getInstance().seekForwardCurrentPlayingSong();
-			Alert applinkinfo = new Alert();
-			applinkinfo.setAlertText1("Applink");
-			applinkinfo.setDuration(3000);
-			applinkinfo.setCorrelationID(nextCorrID());
-			Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-			ttsChunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-					"Applink is a Ford's API which is used to make Android or iOS application Applink enabled."));
-			applinkinfo.setTtsChunks(ttsChunks);
-			try {
-				_syncProxy.sendRPCRequest(applinkinfo);
-			} catch (SyncException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		} else if (notification.getCustomButtonName().equals(102)) {
+			String msg = "This is a Applink enabled music player application, designed to run on Ford's Sync. All commands of this application are Voice based.";
+			AlertClass.getInstance(ProxyService.this).getAlert("Appinfo",3000,  msg);
+			// SyncMainActivity.getInstance().seekBackwardCurrentPlayingSong();
+		} else if (notification.getCustomButtonName().equals(103)) {
+			String msg = "Applink is a Ford's API which is used to make Android or iOS application Applink enabled.";
+			AlertClass.getInstance(ProxyService.this).getAlert("Appinfo", 3000, msg);
 
-		} else if (notification.getCustomButtonName().equals(106)) {
-			Alert alert = new Alert();
-			alert.setAlertText1("Command Information");
-			alert.setAlertText2("");
-			alert.setDuration(3000);
-			alert.setCorrelationID(nextCorrID());
-			Vector<TTSChunk> ttsChunks = new Vector<TTSChunk>();
-			ttsChunks
-					.add(TTSChunkFactory
-							.createChunk(
-									SpeechCapabilities.TEXT,
-									"Four Main Commands are available in this Music application. Apart from Play and pause commands. +"
-											+ "There are Next, Previous, Seek forward and Seek Backward commands are vailable as well. These commmands are also available in Voice recognition and Sub Menu CMD forms"));
-			alert.setTtsChunks(ttsChunks);
-			try {
-				_syncProxy.sendRPCRequest(alert);
-			} catch (SyncException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} else if (notification.getCustomButtonName().equals(107)) {
+		} else if (notification.getCustomButtonName().equals(104)) {
+			String msg = "Four Main Commands are available in this Music application. Apart from Play and pause commands. +"
+											+ "There are Next, Previous, Seek forward and Seek Backward commands are vailable as well. These commmands are also available in Voice recognition and Sub Menu CMD forms";
+			AlertClass.getInstance(ProxyService.this).getAlert("Appinfo", 3000, msg);
+			
+		} else if (notification.getCustomButtonName().equals(105)) {
 			String scrollableMessageBody = new String(
 					"This is Applink enabled Application. This Player has Voice command. User can give voice command to operate this player. Available Voice commands are Play, Pause, Next, Previous, Backward and forwards. This Player has Voice command. User can give voice command to operate this player. Available Voice commands are Play, Pause, Next, Previous, Backward and forwards");
-			ScrollableMessage scrllMsg = new ScrollableMessage();
-			scrllMsg.setCorrelationID(nextCorrID());
-			scrllMsg.setTimeout(30000);
-			scrllMsg.setScrollableMessageBody(scrollableMessageBody);
+			ScrollableMessageClass.getInstance(ProxyService.this)
+					.getScrollableMessage(scrollableMessageBody);
 
-			try {
-				_syncProxy.sendRPCRequest(scrllMsg);
-			} catch (SyncException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} else if (notification.getCustomButtonName().equals(108)) {
-			// PerformVoiceRecordingInteraction();
-			// new PerformAudioPassThruClass();
+		} else if (notification.getCustomButtonName().equals(106)) {
 			PerformAudioPassThruClass.getInstance(ProxyService.this).show();
-		} else if (notification.getCustomButtonName().equals(109)) {
-			Vector<String> str = new Vector<String>();
+		} else if (notification.getCustomButtonName().equals(107)) {
+			SubscribeVehicleDataClass.getInstance(ProxyService.this, 2).getVehicleData();
+			
+			/*Vector<String> str = new Vector<String>();
 			str.add("Slider");
 			str.add("Test");
 			str.add("Footer");
@@ -739,7 +672,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			} catch (SyncException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
+			}*/
 
 		}
 
@@ -819,15 +752,17 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 
 	@Override
-	public void onShowResponse(ShowResponse arg0) {
+	public void onShowResponse(ShowResponse showNotif) {
 		// TODO Auto-generated method stub
-
+		Log.i("" + showNotif.getFunctionName(), "" + showNotif.getInfo()
+				+ " - " + showNotif);
 	}
 
 	@Override
-	public void onSpeakResponse(SpeakResponse arg0) {
+	public void onSpeakResponse(SpeakResponse speakResNotif) {
 		// TODO Auto-generated method stub
-
+		Log.i("" + speakResNotif.getFunctionName(),
+				"" + speakResNotif.getInfo() + " - " + speakResNotif);
 	}
 
 	@Override
@@ -863,7 +798,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		return new Binder();
 	}
 
-	
 	private void createInteractionChoiceSet() {
 		int i;
 		Vector<Choice> choiceVector = new Vector<Choice>();
@@ -933,7 +867,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		}
 
 	}
-
 
 	private void PerformInteraction() {
 		Vector<TTSChunk> initChunks = TTSChunkFactory
@@ -1198,88 +1131,34 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	 */
 
 	private void showSoftButtonsOnScreen() {
-		next = new SoftButton();
-		next.setText("Next");
-		next.setSoftButtonID(100);
-		next.setType(SoftButtonType.SBT_TEXT);
-		next.setSystemAction(SystemAction.DEFAULT_ACTION);
 
-		previous = new SoftButton();
-		previous.setText("Prev");
-		previous.setSoftButtonID(101);
-		previous.setType(SoftButtonType.SBT_TEXT);
-		previous.setSystemAction(SystemAction.DEFAULT_ACTION);
+		//Add Soft button name 
+		ArrayList<String> SoftButtonName = new ArrayList<String>();
+		SoftButtonName.add("Next");
+		SoftButtonName.add("Prev");
+		SoftButtonName.add("AppInfo");
+		SoftButtonName.add("Applink");
+		SoftButtonName.add("CmdInfo");
+		SoftButtonName.add("Help");
+		SoftButtonName.add("Record");
+		SoftButtonName.add("Vehicle");
+		
+		//Add Soft buttonID
+		ArrayList<Integer> SoftButtonId = new ArrayList<Integer>();
+		SoftButtonId.add(100);
+		SoftButtonId.add(101);
+		SoftButtonId.add(102);
+		SoftButtonId.add(103);
+		SoftButtonId.add(104);
+		SoftButtonId.add(105);
+		SoftButtonId.add(106);
+		SoftButtonId.add(107);
+		
 
-		/*
-		 * forward = new SoftButton(); forward.setText("Forward");
-		 * forward.setSoftButtonID(102);
-		 * forward.setType(SoftButtonType.SBT_TEXT);
-		 * forward.setSystemAction(SystemAction.DEFAULT_ACTION);
-		 * 
-		 * backward = new SoftButton(); backward.setText("Backward");
-		 * backward.setSoftButtonID(103);
-		 * backward.setType(SoftButtonType.SBT_TEXT);
-		 * backward.setSystemAction(SystemAction.DEFAULT_ACTION);
-		 */
+		SoftButtonClass.getInstance(ProxyService.this).addSoftButtons(
+				SoftButtonName, SoftButtonId);
 
-		// AppInfo
-		appInfo = new SoftButton();
-		appInfo.setText("AppInfo");
-		appInfo.setSoftButtonID(104);
-		appInfo.setType(SoftButtonType.SBT_TEXT);
-		appInfo.setSystemAction(SystemAction.DEFAULT_ACTION);
-
-		applinkInfo = new SoftButton();
-		applinkInfo.setText("Applink");
-		applinkInfo.setSoftButtonID(105);
-		applinkInfo.setType(SoftButtonType.SBT_TEXT);
-		applinkInfo.setSystemAction(SystemAction.DEFAULT_ACTION);
-
-		cmdInfo = new SoftButton();
-		cmdInfo.setText("CmdInfo");
-
-		cmdInfo.setSoftButtonID(106);
-		cmdInfo.setType(SoftButtonType.SBT_TEXT);
-		cmdInfo.setSystemAction(SystemAction.DEFAULT_ACTION);
-
-		scrollableMsg = new SoftButton();
-		scrollableMsg.setText("Help");
-		scrollableMsg.setSoftButtonID(107);
-		scrollableMsg.setType(SoftButtonType.SBT_TEXT);
-		scrollableMsg.setSystemAction(SystemAction.DEFAULT_ACTION);
-
-		APTHCheck = new SoftButton();
-		APTHCheck.setText("Record");
-		APTHCheck.setSoftButtonID(108);
-		APTHCheck.setType(SoftButtonType.SBT_TEXT);
-		APTHCheck.setSystemAction(SystemAction.DEFAULT_ACTION);
-
-		vehicleData = new SoftButton();
-		vehicleData.setText("Vehicle");
-		vehicleData.setSoftButtonID(109);
-		vehicleData.setType(SoftButtonType.SBT_TEXT);
-		vehicleData.setSystemAction(SystemAction.DEFAULT_ACTION);
-
-		// Send Show RPC:
-		Vector<SoftButton> buttons = new Vector<SoftButton>();
-		buttons.add(next);
-		buttons.add(previous);
-		// buttons.add(forward);
-		// buttons.add(backward);
-		buttons.add(appInfo);
-		buttons.add(applinkInfo);
-		buttons.add(cmdInfo);
-		buttons.add(scrollableMsg);
-		buttons.add(APTHCheck);
-		buttons.add(vehicleData);
-		try {
-			_syncProxy.show("", "", "", "", null, buttons, null, null,
-					nextCorrID());
-		} catch (SyncException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+			}
 
 	public void showLockScreen() {
 		// only throw up lockscreen if main activity is currently on top
@@ -1293,7 +1172,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			i.putExtra("startlock", "lock");
 			startActivity(i);
 		} else {
-			 _mainInstance.playCurrentSong();
+			_mainInstance.playCurrentSong();
 
 			Intent i = new Intent(this, LockScreenActivity.class);
 			i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -1315,6 +1194,30 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 	public boolean getLockScreenStatus() {
 		return lockscreenUP;
+	}
+
+	@Override
+	public void onAlertManeuverResponse(AlertManeuverResponse arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onOnTBTClientState(OnTBTClientState arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onShowConstantTBTResponse(ShowConstantTBTResponse arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onUpdateTurnListResponse(UpdateTurnListResponse arg0) {
+		// TODO Auto-generated method stub
+
 	}
 
 }
