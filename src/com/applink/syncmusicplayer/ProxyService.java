@@ -116,8 +116,8 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	private Integer choiceSetId = 1020;
 	private Integer interactionChoiceSetID = 1030;
 	private int lastIndexOfSongChoiceId;
-	private SoftButton next, previous, appInfo, applinkInfo, cmdInfo,
-			scrollableMsg, APTHCheck, vehicleData;
+	private String initChunks, helpChunks, tymoutChunks, displayable;
+	
 
 	public int getLastIndexOfSongChoiceId() {
 		return lastIndexOfSongChoiceId;
@@ -520,9 +520,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 
 	@Override
-	public void onDeleteCommandResponse(DeleteCommandResponse arg0) {
+	public void onDeleteCommandResponse(DeleteCommandResponse delCmdResponse) {
 		// TODO Auto-generated method stub
-
+		Log.i(""+delCmdResponse.getFunctionName(), ""+delCmdResponse.getInfo()+"-"+delCmdResponse);
 	}
 
 	@Override
@@ -533,9 +533,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 
 	@Override
-	public void onDeleteSubMenuResponse(DeleteSubMenuResponse arg0) {
+	public void onDeleteSubMenuResponse(DeleteSubMenuResponse delSubMenuResponse) {
 		// TODO Auto-generated method stub
-
+		Log.i(""+delSubMenuResponse.getFunctionName()+"-"+delSubMenuResponse.getResultCode(), ""+delSubMenuResponse.getInfo()+"-"+delSubMenuResponse);
 	}
 
 	@Override
@@ -652,27 +652,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			PerformAudioPassThruClass.getInstance(ProxyService.this).show();
 		} else if (notification.getCustomButtonName().equals(107)) {
 			SubscribeVehicleDataClass.getInstance(ProxyService.this, 2).getVehicleData();
-			
-			/*Vector<String> str = new Vector<String>();
-			str.add("Slider");
-			str.add("Test");
-			str.add("Footer");
-			Slider slider = new Slider();
-			slider.setCorrelationID(5001);
-			slider.setNumTicks(3);
-			slider.setPosition(3);
-			slider.setSliderHeader("SLider Test");
-			slider.setSliderFooter(str);
-			slider.setTimeout(5000);
-
-			try {
-				_syncProxy.sendRPCRequest(slider);
-				_syncProxy.show("Slider", "Coming Soon",
-						TextAlignment.CENTERED, nextCorrID());
-			} catch (SyncException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}*/
+		
 
 		}
 
@@ -707,9 +687,19 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			break;
 		case 1008: // for Choice set
 			PerformInteraction();
+//			initChunks = new String("Say track number or Song title");
+//			helpChunks = new String("Please select a song");
+//			tymoutChunks = new String("Time's up! Try again!");
+//			displayable = new String("Available Tracks");
+//			PerformInteractionClass.getInstance(ProxyService.this).performInteraction(initChunks, helpChunks, tymoutChunks, displayable, 1032);
 			break;
 		case 1009: // for text to speech
 			PerformTTsInteraction();
+//			initChunks = new String("Available voice commands under info are, Features, Application, and, Applink");
+//			helpChunks = new String("Please select your option");
+//			tymoutChunks = new String("Time's up! Try again!");
+//			displayable = new String("Get Informations");
+//			PerformInteractionClass.getInstance(ProxyService.this).performInteraction(initChunks, helpChunks, tymoutChunks, displayable, 1033);
 			break;
 		default:
 			break;
@@ -774,7 +764,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onUnsubscribeButtonResponse(UnsubscribeButtonResponse response) {
 		// TODO Auto-generated method stub
-		Log.i(TAG, "" + response);
+		Log.i(TAG, "UnsubscribeButtonResponse" + response);
 	}
 
 	@Override
@@ -805,18 +795,17 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		SongsManager mgr = new SongsManager();
 		songsList = mgr.getPlayList();
 		for (i = 0; i < songsList.size(); i++) {
-
 			Choice choice1 = new Choice();
 			choice1.setChoiceID(i);
-			// choice1.setMenuName("Track Number" +i);
 			// Displaying song title as Interaction choice set displayable
 			choice1.setMenuName(songsList.get(i).get("songTitle"));
 			choice1.setVrCommands(new Vector<String>(Arrays
 					.asList(new String[] { songsList.get(i).get("songTitle"),
 							"Track " + i })));
 			choiceVector.addElement(choice1);
-
 		}
+		//ChoiceSetClass.getInstance(ProxyService.this).createChoiceSets(choiceVector);
+		
 		lastIndexOfSongChoiceId = i;
 		setLastIndexOfSongChoiceId(lastIndexOfSongChoiceId);
 		RPCRequest trackMsg;
@@ -833,6 +822,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		}
 
 		// Choice set for Info to be used TTS and TTs chunk
+//		ChoiceSetClass.getInstance(ProxyService.this).createChoiceSet(lastIndexOfSongChoiceId + 1, "Application");
+//		ChoiceSetClass.getInstance(ProxyService.this).createChoiceSet(lastIndexOfSongChoiceId + 2, "Features");
+//		ChoiceSetClass.getInstance(ProxyService.this).createChoiceSet(lastIndexOfSongChoiceId + 3, "Applink");
 		Vector<Choice> ttsVector = new Vector<Choice>();
 		Choice choice1 = new Choice();
 		choice1.setChoiceID(lastIndexOfSongChoiceId + 1);
@@ -912,16 +904,15 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 	}
 
-	private void perfomChoiceSetSelection(
-			PerformInteractionResponse interactionResponse) {
+	private void perfomChoiceSetSelection(PerformInteractionResponse interactionResponse) {
 		Speak msg = new Speak();
 		int choice = interactionResponse.getChoiceID();
+		//System.out.println("Choice ID - "+choice);
 		Vector<TTSChunk> chunks = new Vector<TTSChunk>();
 		if (choice == getLastIndexOfSongChoiceId() + 1) {
 			String applicationInfo = "This is a media Application";
 			if (applicationInfo.length() > 0) {
-				chunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-						applicationInfo));
+				chunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,	applicationInfo));
 
 			}
 
