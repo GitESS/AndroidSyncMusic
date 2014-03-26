@@ -103,10 +103,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	protected SyncReceiver mediaButtonReceiver;
 	// variable to contain the current state of the lockscreen
 	private boolean lockscreenUP = false;
-	/*
-	 * private boolean firstHMIStatusChange = true; private static boolean
-	 * waitingForResponse = false;
-	 */
 	private boolean driverdistrationNotif = false;
 	public int trackNumber = 1;
 	private boolean isFullCalled = false;
@@ -117,7 +113,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	private Integer interactionChoiceSetID = 1030;
 	private int lastIndexOfSongChoiceId;
 	private String initChunks, helpChunks, tymoutChunks, displayable;
-	
 
 	public int getLastIndexOfSongChoiceId() {
 		return lastIndexOfSongChoiceId;
@@ -267,10 +262,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	public static SyncProxyALM getProxyInstance() {
 		return _syncProxy;
 	}
-
-	// public static void waiting(boolean waiting) {
-	// waitingForResponse = waiting;
-	// }
 
 	private void initializeTheApp() {
 
@@ -522,7 +513,8 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onDeleteCommandResponse(DeleteCommandResponse delCmdResponse) {
 		// TODO Auto-generated method stub
-		Log.i(""+delCmdResponse.getFunctionName(), ""+delCmdResponse.getInfo()+"-"+delCmdResponse);
+		Log.i("" + delCmdResponse.getFunctionName(),
+				"" + delCmdResponse.getInfo() + "-" + delCmdResponse);
 	}
 
 	@Override
@@ -535,7 +527,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onDeleteSubMenuResponse(DeleteSubMenuResponse delSubMenuResponse) {
 		// TODO Auto-generated method stub
-		Log.i(""+delSubMenuResponse.getFunctionName()+"-"+delSubMenuResponse.getResultCode(), ""+delSubMenuResponse.getInfo()+"-"+delSubMenuResponse);
+		Log.i("" + delSubMenuResponse.getFunctionName() + "-"
+				+ delSubMenuResponse.getResultCode(),
+				"" + delSubMenuResponse.getInfo() + "-" + delSubMenuResponse);
 	}
 
 	@Override
@@ -622,26 +616,31 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 		if (notification.getCustomButtonName().equals(100)) {
 			String msg = "Next";
-			AlertClass.getInstance(ProxyService.this).getAlert("Next", 3000, msg);
+			AlertClass.getInstance(ProxyService.this).getAlert("Next", 3000,
+					msg);
 			SyncMainActivity.getInstance().jumpToNextSong();
 
 		} else if (notification.getCustomButtonName().equals(101)) {
 			String msg = "Previous";
-			AlertClass.getInstance(ProxyService.this).getAlert("Previous", 3000, msg);
+			AlertClass.getInstance(ProxyService.this).getAlert("Previous",
+					3000, msg);
 			SyncMainActivity.getInstance().jumpToPreviousSong();
 		} else if (notification.getCustomButtonName().equals(102)) {
 			String msg = "This is a Applink enabled music player application, designed to run on Ford's Sync. All commands of this application are Voice based.";
-			AlertClass.getInstance(ProxyService.this).getAlert("Appinfo",3000,  msg);
+			AlertClass.getInstance(ProxyService.this).getAlert("Appinfo", 3000,
+					msg);
 			// SyncMainActivity.getInstance().seekBackwardCurrentPlayingSong();
 		} else if (notification.getCustomButtonName().equals(103)) {
 			String msg = "Applink is a Ford's API which is used to make Android or iOS application Applink enabled.";
-			AlertClass.getInstance(ProxyService.this).getAlert("Appinfo", 3000, msg);
+			AlertClass.getInstance(ProxyService.this).getAlert("Appinfo", 3000,
+					msg);
 
 		} else if (notification.getCustomButtonName().equals(104)) {
 			String msg = "Four Main Commands are available in this Music application. Apart from Play and pause commands. +"
-											+ "There are Next, Previous, Seek forward and Seek Backward commands are vailable as well. These commmands are also available in Voice recognition and Sub Menu CMD forms";
-			AlertClass.getInstance(ProxyService.this).getAlert("Appinfo", 3000, msg);
-			
+					+ "There are Next, Previous, Seek forward and Seek Backward commands are vailable as well. These commmands are also available in Voice recognition and Sub Menu CMD forms";
+			AlertClass.getInstance(ProxyService.this).getAlert("Appinfo", 3000,
+					msg);
+
 		} else if (notification.getCustomButtonName().equals(105)) {
 			String scrollableMessageBody = new String(
 					"This is Applink enabled Application. This Player has Voice command. User can give voice command to operate this player. Available Voice commands are Play, Pause, Next, Previous, Backward and forwards. This Player has Voice command. User can give voice command to operate this player. Available Voice commands are Play, Pause, Next, Previous, Backward and forwards");
@@ -651,8 +650,8 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		} else if (notification.getCustomButtonName().equals(106)) {
 			PerformAudioPassThruClass.getInstance(ProxyService.this).show();
 		} else if (notification.getCustomButtonName().equals(107)) {
-			SubscribeVehicleDataClass.getInstance(ProxyService.this, 2).getVehicleData();
-		
+			SubscribeVehicleDataClass.getInstance(ProxyService.this, 2)
+					.getVehicleData();
 
 		}
 
@@ -686,20 +685,24 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			_mainInstance.seekForwardCurrentPlayingSong();
 			break;
 		case 1008: // for Choice set
-			PerformInteraction();
-//			initChunks = new String("Say track number or Song title");
-//			helpChunks = new String("Please select a song");
-//			tymoutChunks = new String("Time's up! Try again!");
-//			displayable = new String("Available Tracks");
-//			PerformInteractionClass.getInstance(ProxyService.this).performInteraction(initChunks, helpChunks, tymoutChunks, displayable, 1032);
+			initChunks = new String("Say track number or Song title");
+			helpChunks = new String("Please select a song");
+			tymoutChunks = new String(
+					"Track One! OR Song Title, For Example Globalization");
+			displayable = new String("Available Tracks");
+			PerformInteractionClass.getInstance(ProxyService.this)
+					.performInteraction(initChunks, helpChunks, tymoutChunks,
+							displayable, 1032);
 			break;
 		case 1009: // for text to speech
-			PerformTTsInteraction();
-//			initChunks = new String("Available voice commands under info are, Features, Application, and, Applink");
-//			helpChunks = new String("Please select your option");
-//			tymoutChunks = new String("Time's up! Try again!");
-//			displayable = new String("Get Informations");
-//			PerformInteractionClass.getInstance(ProxyService.this).performInteraction(initChunks, helpChunks, tymoutChunks, displayable, 1033);
+			initChunks = new String(
+					"Available voice commands under info are, Features, Application, and, Applink. Please Select your Opton! ");
+			helpChunks = new String("Help Chunks");
+			tymoutChunks = new String("Application! OR Features! Or Applink!");
+			displayable = new String("Get Informations");
+			PerformInteractionClass.getInstance(ProxyService.this)
+					.performInteraction(initChunks, helpChunks, tymoutChunks,
+							displayable, 1033);
 			break;
 		default:
 			break;
@@ -802,10 +805,13 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			choice1.setVrCommands(new Vector<String>(Arrays
 					.asList(new String[] { songsList.get(i).get("songTitle"),
 							"Track " + i })));
+
+			// ChoiceSetClass.getInstance(ProxyService.this).createChoiceSet(i,
+			// (songsList.get(i).get("songTitle")));
 			choiceVector.addElement(choice1);
 		}
-		//ChoiceSetClass.getInstance(ProxyService.this).createChoiceSets(choiceVector);
-		
+		// ChoiceSetClass.getInstance(ProxyService.this).createChoiceSets(choiceVector);
+
 		lastIndexOfSongChoiceId = i;
 		setLastIndexOfSongChoiceId(lastIndexOfSongChoiceId);
 		RPCRequest trackMsg;
@@ -822,9 +828,12 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		}
 
 		// Choice set for Info to be used TTS and TTs chunk
-//		ChoiceSetClass.getInstance(ProxyService.this).createChoiceSet(lastIndexOfSongChoiceId + 1, "Application");
-//		ChoiceSetClass.getInstance(ProxyService.this).createChoiceSet(lastIndexOfSongChoiceId + 2, "Features");
-//		ChoiceSetClass.getInstance(ProxyService.this).createChoiceSet(lastIndexOfSongChoiceId + 3, "Applink");
+		// ChoiceSetClass.getInstance(ProxyService.this).createChoiceSet(lastIndexOfSongChoiceId
+		// + 1, "Application");
+		// ChoiceSetClass.getInstance(ProxyService.this).createChoiceSet(lastIndexOfSongChoiceId
+		// + 2, "Features");
+		// ChoiceSetClass.getInstance(ProxyService.this).createChoiceSet(lastIndexOfSongChoiceId
+		// + 3, "Applink");
 		Vector<Choice> ttsVector = new Vector<Choice>();
 		Choice choice1 = new Choice();
 		choice1.setChoiceID(lastIndexOfSongChoiceId + 1);
@@ -832,6 +841,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		choice1.setVrCommands(new Vector<String>(Arrays
 				.asList(new String[] { "Application" })));
 		ttsVector.addElement(choice1);
+		Log.i("Index", "" + lastIndexOfSongChoiceId + 1);
+		// ChoiceSetClass.getInstance(ProxyService.this).createChoiceSet(lastIndexOfSongChoiceId
+		// + 1, "Application");
 
 		Choice choice2 = new Choice();
 		choice2.setChoiceID(lastIndexOfSongChoiceId + 2);
@@ -860,77 +872,30 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 	}
 
-	private void PerformInteraction() {
-		Vector<TTSChunk> initChunks = TTSChunkFactory
-				.createSimpleTTSChunks("Say track number, or, song title");
-		Vector<TTSChunk> helpChunks = TTSChunkFactory
-				.createSimpleTTSChunks("Please Select a song");
-		Vector<TTSChunk> timeoutChunks = TTSChunkFactory
-				.createSimpleTTSChunks("Time's up! Try Again!");
-		Vector<Integer> interactionChoiceSetIdList = new Vector<Integer>();
-		interactionChoiceSetIdList.addElement(1032);
-		RPCRequest req;
-		req = RPCRequestFactory.buildPerformInteraction(initChunks,
-				"Available Tracks", interactionChoiceSetIdList, helpChunks,
-				timeoutChunks, InteractionMode.VR_ONLY, 10000, nextCorrID());
-		try {
-			_syncProxy.sendRPCRequest(req);
-		} catch (SyncException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
-
-	private void PerformTTsInteraction() {
-		Vector<TTSChunk> initChunks = TTSChunkFactory
-				.createSimpleTTSChunks("Available voice commands under info are, Features, Application, and, Applink");
-		Vector<TTSChunk> helpChunks = TTSChunkFactory
-				.createSimpleTTSChunks("Please Select your option");
-		Vector<TTSChunk> timeoutChunks = TTSChunkFactory
-				.createSimpleTTSChunks("Time's up! Try Again!");
-		Vector<Integer> interactionChoiceSetIdList = new Vector<Integer>();
-		interactionChoiceSetIdList.addElement(1033);
-		RPCRequest req;
-		req = RPCRequestFactory.buildPerformInteraction(initChunks,
-				"Get Information", interactionChoiceSetIdList, helpChunks,
-				timeoutChunks, InteractionMode.VR_ONLY, 10000, nextCorrID());
-		try {
-			_syncProxy.sendRPCRequest(req);
-		} catch (SyncException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
-
-	private void perfomChoiceSetSelection(PerformInteractionResponse interactionResponse) {
-		Speak msg = new Speak();
+	private void perfomChoiceSetSelection(
+			PerformInteractionResponse interactionResponse) {
 		int choice = interactionResponse.getChoiceID();
-		//System.out.println("Choice ID - "+choice);
 		Vector<TTSChunk> chunks = new Vector<TTSChunk>();
 		if (choice == getLastIndexOfSongChoiceId() + 1) {
 			String applicationInfo = "This is a media Application";
 			if (applicationInfo.length() > 0) {
-				chunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,	applicationInfo));
+				PerformInteractionResponseClass.getInstance(ProxyService.this)
+						.getPerformInteractionResponse(applicationInfo);
 
 			}
 
 		} else if (choice == getLastIndexOfSongChoiceId() + 2) {
 			String features = "This app has voice and Buttons press capabilities";
 			if (features.length() > 0) {
-				chunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-						features));
-
+				PerformInteractionResponseClass.getInstance(ProxyService.this)
+						.getPerformInteractionResponse(features);
 			}
 
 		} else if (choice == getLastIndexOfSongChoiceId() + 3) {
 			String appLink = "Applink is a ford Api to develope appLink enabled App";
 			if (appLink.length() > 0) {
-				// chunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-				// appLink));
-				chunks.add(TTSChunkFactory.createChunk(SpeechCapabilities.TEXT,
-						appLink));
+				PerformInteractionResponseClass.getInstance(ProxyService.this)
+						.getPerformInteractionResponse(appLink);
 			}
 		} else {
 			Log.i("proxy service", " In choice mOd" + choice);
@@ -938,26 +903,8 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			_mainInstance.playCurrentSong(choice);
 		}
 
-		msg.setTtsChunks(chunks);
-		msg.setCorrelationID(nextCorrID());
-		try {
-			_syncProxy.sendRPCRequest(msg);
-		} catch (SyncException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			Log.e(TAG, e.toString());
-		}
-
 	}
 
-	@Override
-	/*
-	 * public void onAlertManeuverResponse(AlertManeuverResponse arg0) { // TODO
-	 * Auto-generated method stub
-	 * 
-	 * }
-	 */
-	// @Override
 	public void onChangeRegistrationResponse(ChangeRegistrationResponse arg0) {
 		// TODO Auto-generated method stub
 
@@ -1085,13 +1032,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 	}
 
-	/*
-	 * @Override public void onShowConstantTBTResponse(ShowConstantTBTResponse
-	 * arg0) { //TODO Auto-generated method stub
-	 * 
-	 * }
-	 */
-
 	@Override
 	public void onSliderResponse(SliderResponse sliderRes) {
 		// TODO Auto-generated method stub
@@ -1114,16 +1054,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 	}
 
-	/*
-	 * @Override public void onUpdateTurnListResponse(UpdateTurnListResponse
-	 * arg0) { // TODO Auto-generated method stub
-	 * 
-	 * }
-	 */
-
 	private void showSoftButtonsOnScreen() {
 
-		//Add Soft button name 
+		// Add Soft button name
 		ArrayList<String> SoftButtonName = new ArrayList<String>();
 		SoftButtonName.add("Next");
 		SoftButtonName.add("Prev");
@@ -1133,8 +1066,8 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		SoftButtonName.add("Help");
 		SoftButtonName.add("Record");
 		SoftButtonName.add("Vehicle");
-		
-		//Add Soft buttonID
+
+		// Add Soft buttonID
 		ArrayList<Integer> SoftButtonId = new ArrayList<Integer>();
 		SoftButtonId.add(100);
 		SoftButtonId.add(101);
@@ -1144,12 +1077,11 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		SoftButtonId.add(105);
 		SoftButtonId.add(106);
 		SoftButtonId.add(107);
-		
 
 		SoftButtonClass.getInstance(ProxyService.this).addSoftButtons(
 				SoftButtonName, SoftButtonId);
 
-			}
+	}
 
 	public void showLockScreen() {
 		// only throw up lockscreen if main activity is currently on top

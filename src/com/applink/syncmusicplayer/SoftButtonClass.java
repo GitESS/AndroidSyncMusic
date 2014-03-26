@@ -30,16 +30,8 @@ public class SoftButtonClass {
 			softButton.setSoftButtonID(id);
 			softButton.setType(SoftButtonType.SBT_TEXT);
 			softButton.setSystemAction(SystemAction.DEFAULT_ACTION);
-			
 			// Send Show RPC:
-			
-			
-
-				ProxyService.getProxyInstance().show("", "", "", "", null, buttons, null, null,
-						ProxyService.getInstance().nextCorrID());
-
-			
-			
+			ProxyService.getProxyInstance().show("", "", "", "", null, buttons, null, null, ProxyService.getInstance().nextCorrID());
 		}catch(SyncException e){
 			
 		}
@@ -62,13 +54,6 @@ public class SoftButtonClass {
 			ProxyService.getProxyInstance().show("", "", "", "", null, vsoftButton, null, null,
 					ProxyService.getInstance().nextCorrID());
 
-			
-			// Send Show RPC:
-			
-			
-
-			
-			
 		}catch(SyncException e){
 			
 		}

@@ -26,22 +26,24 @@ public class ChoiceSetClass {
 	
 	public void createChoiceSet(int id, String menuName){
 		Vector<Choice> choiceVector = new Vector<Choice>();
-		try{
+		
 			Choice choice = new Choice();
 			choice.setChoiceID(id);
 			choice.setMenuName(menuName);
 			choice.setVrCommands(new Vector<String>(Arrays.asList(new String[] { menuName, "Track " + id })));
 			choiceVector.add(choice);
 			
-			RPCRequest trackMsg;
-			//Log.i("InteractionChoiceSet -", "" + nextInteractionChoiceCorrID());
-			trackMsg = RPCRequestFactory.buildCreateInteractionChoiceSet(
-					choiceVector, ProxyService.getInstance().nextInteractionChoiceCorrID(), ProxyService.getInstance().nextCorrID());
-
-			ProxyService.getProxyInstance().sendRPCRequest(trackMsg);
-		}catch(SyncException e){
-			
-		}
+//			try{
+//			
+//			RPCRequest trackMsg;
+//			//Log.i("InteractionChoiceSet -", "" + nextInteractionChoiceCorrID());
+//			trackMsg = RPCRequestFactory.buildCreateInteractionChoiceSet(
+//					choiceVector, ProxyService.getInstance().nextInteractionChoiceCorrID(), ProxyService.getInstance().nextCorrID());
+//
+//			ProxyService.getProxyInstance().sendRPCRequest(trackMsg);
+//		}catch(SyncException e){
+//			
+//		}
 	}
 
 	
