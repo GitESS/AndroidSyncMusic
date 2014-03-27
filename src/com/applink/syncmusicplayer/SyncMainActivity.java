@@ -22,7 +22,6 @@ import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -379,17 +378,16 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	public void seekBackwardCurrentPlayingSong() {
 		// get current song position
 		int currentPosition = syncPlayer.getCurrentPosition();
-		Log.i("Backward-currentPos", "" + currentPosition);
+		//Log.i("Backward-currentPos", "" + currentPosition);
 		// check if seekBackward time is greater than 0 sec
 		if (currentPosition - seekBackwardTime >= 0) {
-			Log.i("If-Backward ", "Control");
+			//Log.i("If-Backward ", "Control");
 			// Backward song
 
 			syncPlayer.seekTo(currentPosition - seekBackwardTime);
 			String songTitle = songsList.get(getCurrentPlayingSongIndex()).get(
 					"songTitle");
-			Log.i("backward-currentPos", "" + currentPosition + "index "
-					+ getCurrentPlayingSongIndex() + " name" + songTitle);
+			//Log.i("backward-currentPos", "" + currentPosition + "index "					+ getCurrentPlayingSongIndex() + " name" + songTitle);
 
 			try {
 				ProxyService.getProxyInstance().show(
@@ -401,7 +399,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 				e.printStackTrace();
 			}
 		} else {
-			Log.i("else-Backward ", "Control");
+			//Log.i("else-Backward ", "Control");
 			// backward to starting position
 			syncPlayer.seekTo(0);
 		}
@@ -413,14 +411,13 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		int currentPosition = syncPlayer.getCurrentPosition();
 		// check if seekForward time is lesser than song duration
 		if (currentPosition + seekForwardTime <= syncPlayer.getDuration()) {
-			Log.i("If-Forward ", "Control");
+			//Log.i("If-Forward ", "Control");
 			// forward song
 
 			syncPlayer.seekTo(currentPosition + seekForwardTime);
 			String songTitle = songsList.get(getCurrentPlayingSongIndex()).get(
 					"songTitle");
-			Log.i("Forwardward-currentPos", "" + currentPosition + "index "
-					+ getCurrentPlayingSongIndex() + " name" + songTitle);
+			//Log.i("Forwardward-currentPos", "" + currentPosition + "index "					+ getCurrentPlayingSongIndex() + " name" + songTitle);
 
 			try {
 				ProxyService.getProxyInstance().show(
@@ -433,7 +430,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			}
 		} else {
 			// forward to end position
-			Log.i("Else-Forward ", "Control");
+			//Log.i("Else-Forward ", "Control");
 			syncPlayer.seekTo(syncPlayer.getDuration());
 		}
 	}
@@ -454,7 +451,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 
 			try {
 				// Added setDataSource() on 13/3/14 to play song
-				Log.i("First Song", "" + (songsList.get(1).get("songPath")));
+				//Log.i("First Song", "" + (songsList.get(1).get("songPath")));
 				String songTitle = songsList.get(1).get("songTitle");
 				syncPlayer.setDataSource(songsList.get(1).get("songPath"));
 				try {
@@ -475,6 +472,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			}
 			syncPlayer.setLooping(true);
 		}
+		//Log.i("Music Player Start", "After perform Interaction");
 		syncPlayer.start();
 	}
 
@@ -500,17 +498,10 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 				ProxyService.getProxyInstance().show("Track No- :" + songIndex,
 						songTitle, TextAlignment.LEFT_ALIGNED,
 						ProxyService.getInstance().nextCorrID());
-				// songTitleLabel.setText(songTitle);
-
-				// Changing Button Image to pause image
 				btnPlay.setImageResource(R.drawable.btn_pause);
 
-				// set Progress bar values
 				songProgressBar.setProgress(0);
 				songProgressBar.setMax(100);
-
-				// Updating progress bar
-				// updateProgressBar();
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
 			} catch (IllegalStateException e) {
@@ -613,7 +604,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		if (ProxyService.getProxyInstance() != null) {
 			try {
 				// / ProxyService.getProxyInstance().dispose();
-				Log.i("Sync Main Servce", " is Running" + isMyServiceRunning());
+				//Log.i("Sync Main Servce", " is Running" + isMyServiceRunning());
 				if (isMyServiceRunning()) {
 					Intent i = new Intent(SyncMainActivity.this,
 							ProxyService.class);
@@ -661,8 +652,8 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 				if (proxyInstance.getCurrentTransportType() == TransportType.BLUETOOTH) {
 					// serviceInstance.reset();
 				} else {
-					Log.e(logTag,
-							"endSyncProxyInstance. No reset required if transport is TCP");
+					//Log.e(logTag,
+					//		"endSyncProxyInstance. No reset required if transport is TCP");
 				}
 				// if proxy == null create proxy
 			} else {
@@ -774,7 +765,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 										Const.Transport.PREFS_KEY_TRANSPORT_RECONNECT,
 										autoReconnect).commit();
 						if (!success) {
-							Log.w(logTag, "Can't save properties");
+							//Log.w(logTag, "Can't save properties");
 						}
 
 						showPropertiesInTitle();
@@ -813,7 +804,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 						}
 					}
 				} else {
-					Log.i("TAG", "A No Paired devices with the name sync");
+					//Log.i("TAG", "A No Paired devices with the name sync");
 				}
 
 				if (isSYNCpaired == true) {
@@ -832,10 +823,10 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 						if (proxyInstance != null) {
 							serviceInstance.reset();
 						} else {
-							Log.i("TAG", "proxy is null");
+						//	Log.i("TAG", "proxy is null");
 							serviceInstance.startProxy();
 						}
-						Log.i("TAG", " proxyAlive == true success");
+					//	Log.i("TAG", " proxyAlive == true success");
 					}
 				}
 			}
@@ -848,7 +839,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		LockScreenActivity.getInstance().finish();
 		syncPlayer.reset();
 		SyncMainActivity.getInstance().finish();
-		Log.i(logTag, "Disconnected");
+	//	Log.i(logTag, "Disconnected");
 	}
 
 	public void lockAppsScreen() {

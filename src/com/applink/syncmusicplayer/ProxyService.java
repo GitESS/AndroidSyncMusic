@@ -9,27 +9,20 @@ import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.YuvImage;
 import android.media.AudioManager;
-import android.net.Proxy;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.ford.syncV4.exception.SyncException;
 import com.ford.syncV4.exception.SyncExceptionCause;
-import com.ford.syncV4.proxy.RPCMessage;
 import com.ford.syncV4.proxy.RPCRequest;
 import com.ford.syncV4.proxy.RPCRequestFactory;
 import com.ford.syncV4.proxy.SyncProxyALM;
-import com.ford.syncV4.proxy.TTSChunkFactory;
 import com.ford.syncV4.proxy.interfaces.IProxyListenerALM;
 import com.ford.syncV4.proxy.rpc.AddCommandResponse;
 import com.ford.syncV4.proxy.rpc.AddSubMenuResponse;
-import com.ford.syncV4.proxy.rpc.Alert;
 import com.ford.syncV4.proxy.rpc.AlertManeuverResponse;
 import com.ford.syncV4.proxy.rpc.AlertResponse;
 import com.ford.syncV4.proxy.rpc.ChangeRegistrationResponse;
@@ -60,7 +53,6 @@ import com.ford.syncV4.proxy.rpc.PerformInteractionResponse;
 import com.ford.syncV4.proxy.rpc.PutFileResponse;
 import com.ford.syncV4.proxy.rpc.ReadDIDResponse;
 import com.ford.syncV4.proxy.rpc.ResetGlobalPropertiesResponse;
-import com.ford.syncV4.proxy.rpc.ScrollableMessage;
 import com.ford.syncV4.proxy.rpc.ScrollableMessageResponse;
 import com.ford.syncV4.proxy.rpc.SetAppIconResponse;
 import com.ford.syncV4.proxy.rpc.SetDisplayLayoutResponse;
@@ -68,10 +60,7 @@ import com.ford.syncV4.proxy.rpc.SetGlobalPropertiesResponse;
 import com.ford.syncV4.proxy.rpc.SetMediaClockTimerResponse;
 import com.ford.syncV4.proxy.rpc.ShowConstantTBTResponse;
 import com.ford.syncV4.proxy.rpc.ShowResponse;
-import com.ford.syncV4.proxy.rpc.Slider;
 import com.ford.syncV4.proxy.rpc.SliderResponse;
-import com.ford.syncV4.proxy.rpc.SoftButton;
-import com.ford.syncV4.proxy.rpc.Speak;
 import com.ford.syncV4.proxy.rpc.SpeakResponse;
 import com.ford.syncV4.proxy.rpc.SubscribeButtonResponse;
 import com.ford.syncV4.proxy.rpc.SubscribeVehicleDataResponse;
@@ -81,14 +70,9 @@ import com.ford.syncV4.proxy.rpc.UnsubscribeVehicleDataResponse;
 import com.ford.syncV4.proxy.rpc.UpdateTurnListResponse;
 import com.ford.syncV4.proxy.rpc.enums.ButtonName;
 import com.ford.syncV4.proxy.rpc.enums.DriverDistractionState;
-import com.ford.syncV4.proxy.rpc.enums.InteractionMode;
 import com.ford.syncV4.proxy.rpc.enums.Language;
 import com.ford.syncV4.proxy.rpc.enums.Result;
-import com.ford.syncV4.proxy.rpc.enums.SoftButtonType;
-import com.ford.syncV4.proxy.rpc.enums.SpeechCapabilities;
-import com.ford.syncV4.proxy.rpc.enums.SystemAction;
 import com.ford.syncV4.proxy.rpc.enums.TextAlignment;
-import com.ford.syncV4.transport.TCPTransportConfig;
 import com.ford.syncV4.util.DebugTool;
 
 public class ProxyService extends Service implements IProxyListenerALM {
@@ -132,13 +116,13 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				"Control is on OnCreate if Service is not created, Create it",
 				Toast.LENGTH_SHORT).show();
 
-		Log.i(TAG, "ProxyService.onCreate()");
+		//Log.i(TAG, "ProxyService.onCreate()");
 		_instance = this;
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		Log.i(TAG, "ProxyService.onStartCommand()");
+		//Log.i(TAG, "ProxyService.onStartCommand()");
 		Toast.makeText(getApplicationContext(), "Control is on OnStartCommand",
 				Toast.LENGTH_SHORT).show();
 		mBtAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -182,7 +166,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 
 	public void startProxy() {
-		Log.i(TAG, "ProxyService.startProxy()");
+	//	Log.i(TAG, "ProxyService.startProxy()");
 
 		if (_syncProxy == null) {
 			try {
@@ -211,13 +195,13 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				}
 			}
 		}
-		Log.i(TAG, "ProxyService.startProxy() returning");
+		//Log.i(TAG, "ProxyService.startProxy() returning");
 	}
 
 	@Override
 	public void onDestroy() {
 		// TODO Auto-generated method stub
-		Log.i(TAG, "ProxyService.onDestroy()");
+		//Log.i(TAG, "ProxyService.onDestroy()");
 
 		disposeSyncProxy();
 		clearlockscreen();
@@ -229,7 +213,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	}
 
 	public void disposeSyncProxy() {
-		Log.i(TAG, "ProxyService.disposeSyncProxy()");
+	//	Log.i(TAG, "ProxyService.disposeSyncProxy()");
 
 		if (_syncProxy != null) {
 			try {
@@ -274,7 +258,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 		initializeVoiceCommand();
 
-		Log.i("Indide the", "Init method4");
+		//Log.i("Indide the", "Init method4");
 		// ChoiceSet
 		createInteractionChoiceSet();
 		showLockScreen();
@@ -283,54 +267,54 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 	private void initializeVoiceCommand() {
 		try {
-			Log.i("Play Song", "" + nextCMDCorrID());
+		//	Log.i("Play Song", "" + nextCMDCorrID());
 			_syncProxy.addCommand(
 					1002,
 					"Play Song",
 					new Vector<String>(Arrays.asList(new String[] {
 							"Play Song", "Play" })), nextCorrID());
-			Log.i("Pause Song", "" + nextCMDCorrID());
+			//Log.i("Pause Song", "" + nextCMDCorrID());
 			_syncProxy.addCommand(
 					1003,
 					"Pause Song",
 					new Vector<String>(Arrays.asList(new String[] {
 							"Pause Song", "Pause" })), nextCorrID());
-			Log.i("Next Song", "" + nextCMDCorrID());
+		//	Log.i("Next Song", "" + nextCMDCorrID());
 			_syncProxy.addCommand(
 					1004,
 					"Next Song",
 					new Vector<String>(Arrays.asList(new String[] {
 							"Next Song", "Next" })), nextCorrID());
-			Log.i("Previous Song", "" + nextCMDCorrID());
+	//		Log.i("Previous Song", "" + nextCMDCorrID());
 			_syncProxy.addCommand(
 					1005,
 					"Previous Song",
 					new Vector<String>(Arrays.asList(new String[] {
 							"Previous Song", "Previous" })), nextCorrID());
-			Log.i("Backward Song", "" + nextCMDCorrID());
+		//	Log.i("Backward Song", "" + nextCMDCorrID());
 			_syncProxy.addCommand(
 					1006,
 					"Backward Song",
 					new Vector<String>(Arrays.asList(new String[] {
 							"Backward Song", "Backward", "bekward", "bekword",
 							"Seek Backward" })), nextCorrID());
-			Log.i("Forward Song", "" + nextCMDCorrID());
+		//	Log.i("Forward Song", "" + nextCMDCorrID());
 			_syncProxy.addCommand(
 					1007,
 					"Forward Song",
 					new Vector<String>(Arrays.asList(new String[] {
 							"Forward Song", "Forward", "forward", "forwod",
 							"Seek Forward" })), nextCorrID());
-			Log.i("Play Song", "" + nextCMDCorrID());
+	//		Log.i("Play Song", "" + nextCMDCorrID());
 			_syncProxy.addCommand(1008, "Select Song", new Vector<String>(
 					Arrays.asList(new String[] { "Select Song" })),
 					nextCorrID());
-			Log.i("Play Song", "" + nextCMDCorrID());
+		//	Log.i("Play Song", "" + nextCMDCorrID());
 			_syncProxy.addCommand(1009, "info",
 					new Vector<String>(Arrays.asList(new String[] { "info" })),
 					nextCorrID());
 		} catch (SyncException e) {
-			Log.e(TAG, "Error adding AddCommands", e);
+			//Log.e(TAG, "Error adding AddCommands", e);
 		}
 	}
 
@@ -353,13 +337,13 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			_syncProxy.subscribeButton(ButtonName.PRESET_9, nextCorrID());
 		} catch (SyncException e) {
 			e.printStackTrace();
-			Log.e(TAG, e.toString());
+			//Log.e(TAG, e.toString());
 		}
 	}
 
 	@Override
 	public void onOnHMIStatus(OnHMIStatus notification) {
-		Log.i(TAG, "" + notification);
+		//Log.i(TAG, "" + notification);
 
 		switch (notification.getSystemContext()) {
 		case SYSCTXT_MAIN:
@@ -368,14 +352,14 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			try {
 				initializeTheApp();
 			} catch (Exception e) {
-				Log.i("SyncProxy", "VRSESSION");
+		//		Log.i("SyncProxy", "VRSESSION");
 			}
 			break;
 		case SYSCTXT_MENU:
 			try {
 				initializeTheApp();
 			} catch (Exception e) {
-				Log.i("SyncProxy", "MENU");
+			//	Log.i("SyncProxy", "MENU");
 			}
 			break;
 		default:
@@ -384,9 +368,11 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		switch (notification.getAudioStreamingState()) {
 		case AUDIBLE:
 			if (playingAudio)
+				//Log.i("Audible", "First Run");
 				_mainInstance.playCurrentSong();
 			break;
 		case NOT_AUDIBLE:
+		//	Log.i("Not Audible", "First Run");
 			SyncMainActivity.getInstance().pauseCurrentSong();
 			break;
 		default:
@@ -397,7 +383,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		// Checking bluetooth connectivity here to terminate the app in case
 		// bluetooth is not on.
 		case HMI_FULL:
-			Log.i("HMI", "FULL");
+			//Log.i("HMI", "FULL");
 			isFullCalled = true;
 
 			if (_syncProxy.getAppInterfaceRegistered()) {
@@ -405,7 +391,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 					try {
 						_syncProxy.show("Welcome", "Sync Music Player",
 								TextAlignment.CENTERED, nextCorrID());
-						Log.i("InFull", "Before Calling initializeTheApp()");
+				//		Log.i("InFull", "Before Calling initializeTheApp()");
 						initializeTheApp();
 					} catch (SyncException e) {
 						// TODO Auto-generated catch block
@@ -425,11 +411,11 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 			break;
 		case HMI_LIMITED:
-			Log.i("HMI_LIMITED", "HMI_LIMITED");
+		//	Log.i("HMI_LIMITED", "HMI_LIMITED");
 			// initializeTheApp();
 			break;
 		case HMI_BACKGROUND:
-			Log.i("HMI_BACKGROUND", "HMI_BACKGROUND");
+	//		Log.i("HMI_BACKGROUND", "HMI_BACKGROUND");
 			// initializeTheApp();
 			break;
 		case HMI_NONE:
@@ -438,7 +424,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				SyncMainActivity.getInstance().finish();
 				stopSelf();
 			}
-			Log.i("SyncProxy", "HMI_NONE");
+		//	Log.i("SyncProxy", "HMI_NONE");
 			//
 			break;
 		default:
@@ -450,19 +436,19 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onAddCommandResponse(AddCommandResponse addCmdResponse) {
 		// TODO Auto-generated method stub
-		Log.i(TAG, addCmdResponse.toString());
+	//	Log.i(TAG, addCmdResponse.toString());
 
 	}
 
 	@Override
 	public void onProxyClosed(String arg0, Exception e) {
 		// TODO Auto-generated method stub
-		Log.e(TAG, "onProxyClosed: TDK-EXIT" + arg0, e);
+	//	Log.e(TAG, "onProxyClosed: TDK-EXIT" + arg0, e);
 
 		clearlockscreen();
 		if ((((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.SYNC_PROXY_CYCLED)) {
 			if (((SyncException) e).getSyncExceptionCause() != SyncExceptionCause.BLUETOOTH_DISABLED) {
-				Log.v(TAG, "reset proxy in onproxy closed");
+		//		Log.v(TAG, "reset proxy in onproxy closed");
 				// reset();
 			}
 		}
@@ -485,36 +471,35 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onError(String info, Exception e) {
 		// TODO Auto-generated method stub
-		Log.e(TAG, "******onProxyError******");
-		Log.e(TAG, "ERROR: " + info, e);
+	//	Log.e(TAG, "******onProxyError******");
+		//Log.e(TAG, "ERROR: " + info, e);
 	}
 
 	@Override
 	public void onAddSubMenuResponse(AddSubMenuResponse subMenuResponse) {
 		// TODO Auto-generated method stub
-		Log.i(TAG, subMenuResponse.toString());
+	//	Log.i(TAG, subMenuResponse.toString());
 
 	}
 
 	@Override
 	public void onAlertResponse(AlertResponse alertNotif) {
 		// TODO Auto-generated method stub
-		Log.i("" + alertNotif.getFunctionName(), "" + alertNotif);
+		//Log.i("" + alertNotif.getFunctionName(), "" + alertNotif);
 	}
 
 	@Override
 	public void onCreateInteractionChoiceSetResponse(
 			CreateInteractionChoiceSetResponse interactionChoiceSetResponse) {
 		// TODO Auto-generated method stub
-		Log.i("" + interactionChoiceSetResponse.getFunctionName(), ""
-				+ interactionChoiceSetResponse);
+	//	Log.i("" + interactionChoiceSetResponse.getFunctionName(), ""
+		//		+ interactionChoiceSetResponse);
 	}
 
 	@Override
 	public void onDeleteCommandResponse(DeleteCommandResponse delCmdResponse) {
 		// TODO Auto-generated method stub
-		Log.i("" + delCmdResponse.getFunctionName(),
-				"" + delCmdResponse.getInfo() + "-" + delCmdResponse);
+		//Log.i("" + delCmdResponse.getFunctionName(),"" + delCmdResponse.getInfo() + "-" + delCmdResponse);
 	}
 
 	@Override
@@ -527,9 +512,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onDeleteSubMenuResponse(DeleteSubMenuResponse delSubMenuResponse) {
 		// TODO Auto-generated method stub
-		Log.i("" + delSubMenuResponse.getFunctionName() + "-"
-				+ delSubMenuResponse.getResultCode(),
-				"" + delSubMenuResponse.getInfo() + "-" + delSubMenuResponse);
+//		Log.i("" + delSubMenuResponse.getFunctionName() + "-"
+//				+ delSubMenuResponse.getResultCode(),
+//				"" + delSubMenuResponse.getInfo() + "-" + delSubMenuResponse);
 	}
 
 	@Override
@@ -541,14 +526,14 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onOnButtonEvent(OnButtonEvent notification) {
 		// TODO Auto-generated method stub
-		Log.i(TAG, "" + notification.getButtonName());
+		//Log.i(TAG, "" + notification.getButtonName());
 
 	}
 
 	@Override
 	public void onOnButtonPress(OnButtonPress notification) {
 		// TODO Auto-generated method stub
-		Log.i(TAG, "" + notification);
+		//Log.i(TAG, "" + notification);
 
 		audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
@@ -660,7 +645,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onOnCommand(OnCommand notification) {
 		// TODO Auto-generated method stub
-		Log.i("notification.getCmdID()", "" + notification.getCmdID());
+		//Log.i("notification.getCmdID()", "" + notification.getCmdID());
 		switch (notification.getCmdID()) {
 		case 1002:
 			_mainInstance.syncPlayer.start();
@@ -669,19 +654,19 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			_mainInstance.pauseCurrentSong();
 			break;
 		case 1004:
-			Log.i("notification.getCmdID()", "" + notification.getCmdID());
+			//Log.i("notification.getCmdID()", "" + notification.getCmdID());
 			_mainInstance.jumpToNextSong();
 			break;
 		case 1005:
-			Log.i("notification.getCmdID()", "" + notification.getCmdID());
+			//Log.i("notification.getCmdID()", "" + notification.getCmdID());
 			_mainInstance.jumpToPreviousSong();
 			break;
 		case 1006:
-			Log.i("notification.getCmdID()", "" + notification.getCmdID());
+			//Log.i("notification.getCmdID()", "" + notification.getCmdID());
 			_mainInstance.seekBackwardCurrentPlayingSong();
 			break;
 		case 1007:
-			Log.i("notification.getCmdID()", "" + notification.getCmdID());
+		//	Log.i("notification.getCmdID()", "" + notification.getCmdID());
 			_mainInstance.seekForwardCurrentPlayingSong();
 			break;
 		case 1008: // for Choice set
@@ -747,27 +732,27 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onShowResponse(ShowResponse showNotif) {
 		// TODO Auto-generated method stub
-		Log.i("" + showNotif.getFunctionName(), "" + showNotif.getInfo()
-				+ " - " + showNotif);
+		//Log.i("" + showNotif.getFunctionName(), "" + showNotif.getInfo()
+			//	+ " - " + showNotif);
 	}
 
 	@Override
 	public void onSpeakResponse(SpeakResponse speakResNotif) {
 		// TODO Auto-generated method stub
-		Log.i("" + speakResNotif.getFunctionName(),
-				"" + speakResNotif.getInfo() + " - " + speakResNotif);
+		//Log.i("" + speakResNotif.getFunctionName(),
+			//	"" + speakResNotif.getInfo() + " - " + speakResNotif);
 	}
 
 	@Override
 	public void onSubscribeButtonResponse(SubscribeButtonResponse response) {
 		// TODO Auto-generated method stub
-		Log.i(TAG, "" + response);
+		//Log.i(TAG, "" + response);
 	}
 
 	@Override
 	public void onUnsubscribeButtonResponse(UnsubscribeButtonResponse response) {
 		// TODO Auto-generated method stub
-		Log.i(TAG, "UnsubscribeButtonResponse" + response);
+		//Log.i(TAG, "UnsubscribeButtonResponse" + response);
 	}
 
 	@Override
@@ -776,10 +761,10 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		driverdistrationNotif = true;
 		// Log.i(TAG, "dd: " + notification.getStringState());
 		if (notification.getState() == DriverDistractionState.DD_OFF) {
-			Log.i(TAG, "clear lock, DD_OFF");
+			//Log.i(TAG, "clear lock, DD_OFF");
 			clearlockscreen();
 		} else {
-			Log.i(TAG, "show lockscreen, DD_ON");
+		//	Log.i(TAG, "show lockscreen, DD_ON");
 			showLockScreen();
 		}
 
@@ -815,7 +800,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		lastIndexOfSongChoiceId = i;
 		setLastIndexOfSongChoiceId(lastIndexOfSongChoiceId);
 		RPCRequest trackMsg;
-		Log.i("InteractionChoiceSet -", "" + nextInteractionChoiceCorrID());
+	///	Log.i("InteractionChoiceSet -", "" + nextInteractionChoiceCorrID());
 		trackMsg = RPCRequestFactory.buildCreateInteractionChoiceSet(
 				choiceVector, nextInteractionChoiceCorrID(), nextCorrID());
 
@@ -841,7 +826,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		choice1.setVrCommands(new Vector<String>(Arrays
 				.asList(new String[] { "Application" })));
 		ttsVector.addElement(choice1);
-		Log.i("Index", "" + lastIndexOfSongChoiceId + 1);
+		//Log.i("Index", "" + lastIndexOfSongChoiceId + 1);
 		// ChoiceSetClass.getInstance(ProxyService.this).createChoiceSet(lastIndexOfSongChoiceId
 		// + 1, "Application");
 
@@ -883,14 +868,12 @@ public class ProxyService extends Service implements IProxyListenerALM {
 						.getPerformInteractionResponse(applicationInfo);
 
 			}
-
 		} else if (choice == getLastIndexOfSongChoiceId() + 2) {
 			String features = "This app has voice and Buttons press capabilities";
 			if (features.length() > 0) {
 				PerformInteractionResponseClass.getInstance(ProxyService.this)
 						.getPerformInteractionResponse(features);
 			}
-
 		} else if (choice == getLastIndexOfSongChoiceId() + 3) {
 			String appLink = "Applink is a ford Api to develope appLink enabled App";
 			if (appLink.length() > 0) {
@@ -898,7 +881,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 						.getPerformInteractionResponse(appLink);
 			}
 		} else {
-			Log.i("proxy service", " In choice mOd" + choice);
+			//Log.i("proxy service", " In choice mOd" + choice);
 
 			_mainInstance.playCurrentSong(choice);
 		}
@@ -931,7 +914,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onGetVehicleDataResponse(GetVehicleDataResponse response) {
 		// TODO Auto-generated method stub
-		Log.i("onGetVehicleData", response.toString());
+	//	Log.i("onGetVehicleData", response.toString());
 	}
 
 	@Override
@@ -943,7 +926,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onOnAudioPassThru(OnAudioPassThru notification) {
 		// TODO Auto-generated method stub
-		Log.i("OnAudioPassThruNotif", "-" + notification.toString());
+		//Log.i("OnAudioPassThruNotif", "-" + notification.toString());
 
 		final byte[] aptData = notification.getAPTData();
 		SyncMainActivity.getInstance().runOnUiThread(new Runnable() {
@@ -959,7 +942,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	public void onPerformAudioPassThruResponse(
 			PerformAudioPassThruResponse response) {
 		// TODO Auto-generated method stub
-		Log.i("PerformAudioPassThru", "-" + response);
+	//	Log.i("PerformAudioPassThru", "-" + response);
 
 		final Result result = response.getResultCode();
 		SyncMainActivity.getInstance().runOnUiThread(new Runnable() {
@@ -976,7 +959,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	public void onEndAudioPassThruResponse(EndAudioPassThruResponse response) {
 		// TODO Auto-generated method stub
 
-		Log.i("EndAudioPassThru", "-" + response.toString());
+		//Log.i("EndAudioPassThru", "-" + response.toString());
 
 		final SyncMainActivity mainActivity = SyncMainActivity.getInstance();
 		final Result result = response.getResultCode();
@@ -1017,7 +1000,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	public void onScrollableMessageResponse(
 			ScrollableMessageResponse scrollResponse) {
 		// TODO Auto-generated method stub
-		Log.i("Scroll Response", "" + scrollResponse.toString());
+	//	Log.i("Scroll Response", "" + scrollResponse.toString());
 	}
 
 	@Override
@@ -1035,14 +1018,14 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onSliderResponse(SliderResponse sliderRes) {
 		// TODO Auto-generated method stub
-		Log.i("Slider", "" + sliderRes);
+		//Log.i("Slider", "" + sliderRes);
 	}
 
 	@Override
 	public void onSubscribeVehicleDataResponse(
 			SubscribeVehicleDataResponse response) {
 		// TODO Auto-generated method stub
-		Log.i("onSubscribeVehicledata", response.toString());
+	//	Log.i("onSubscribeVehicledata", response.toString());
 
 	}
 
@@ -1050,7 +1033,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	public void onUnsubscribeVehicleDataResponse(
 			UnsubscribeVehicleDataResponse response) {
 		// TODO Auto-generated method stub
-		Log.i("onUnSubscribeVehicledata", response.toString());
+		//Log.i("onUnSubscribeVehicledata", response.toString());
 
 	}
 
@@ -1087,7 +1070,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		// only throw up lockscreen if main activity is currently on top
 		// else, wait until onResume() to throw lockscreen so it doesn't
 		// pop-up while a user is using another app on the phone
-		Log.i("In ShowLockScreen", "control is here");
+	//	Log.i("In ShowLockScreen", "control is here");
 		if (SyncMainActivity.getInstance() == null) {
 			Intent i = new Intent(ProxyService.this, SyncMainActivity.class);
 			i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -1109,7 +1092,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	private void clearlockscreen() {
 		if (LockScreenActivity.getInstance() != null) {
 			// LockScreenActivity.getInstance().exit();
-			Log.i("LOckScreen", "Calling");
+		//	Log.i("LOckScreen", "Calling");
 			LockScreenActivity.getInstance().finish();
 		}
 		lockscreenUP = false;
