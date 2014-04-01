@@ -40,6 +40,7 @@ public class SubscribeVehicleDataClass {
 				msg.setBodyInformation(true);
 				msg.setDeviceStatus(true);
 				msg.setDriverBraking(true);
+				
 
 				ProxyService.getProxyInstance().sendRPCRequest(msg);
 			} catch (SyncException e) {
@@ -66,6 +67,7 @@ public class SubscribeVehicleDataClass {
 				msg.setDeviceStatus(true);
 				msg.setDriverBraking(true);
 				
+				
 				ProxyService.getProxyInstance().sendRPCRequest(msg);
 			} catch (SyncException e) {
 			}
@@ -90,7 +92,7 @@ public class SubscribeVehicleDataClass {
 				msg.setBodyInformation(false);
 				msg.setDeviceStatus(false);
 				msg.setDriverBraking(false);
-				
+								
 
 				ProxyService.getProxyInstance().sendRPCRequest(msg);
 			} catch (SyncException e) {

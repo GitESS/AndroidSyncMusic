@@ -78,7 +78,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	public int trackNumber;
 	private int currentPlayingSongIndex;
 	Button exit;
-	private static final String logTag = "SyncMusicPlayer";
+	public static final String logTag = "SyncMusicPlayer";
 	private static SyncMainActivity _activity;
 
 	/**

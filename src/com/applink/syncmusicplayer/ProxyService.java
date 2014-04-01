@@ -13,6 +13,7 @@ import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.ford.syncV4.exception.SyncException;
@@ -52,6 +53,8 @@ import com.ford.syncV4.proxy.rpc.PerformAudioPassThruResponse;
 import com.ford.syncV4.proxy.rpc.PerformInteractionResponse;
 import com.ford.syncV4.proxy.rpc.PutFileResponse;
 import com.ford.syncV4.proxy.rpc.ReadDIDResponse;
+import com.ford.syncV4.proxy.rpc.RegisterAppInterface;
+import com.ford.syncV4.proxy.rpc.RegisterAppInterfaceResponse;
 import com.ford.syncV4.proxy.rpc.ResetGlobalPropertiesResponse;
 import com.ford.syncV4.proxy.rpc.ScrollableMessageResponse;
 import com.ford.syncV4.proxy.rpc.SetAppIconResponse;
@@ -68,11 +71,20 @@ import com.ford.syncV4.proxy.rpc.TTSChunk;
 import com.ford.syncV4.proxy.rpc.UnsubscribeButtonResponse;
 import com.ford.syncV4.proxy.rpc.UnsubscribeVehicleDataResponse;
 import com.ford.syncV4.proxy.rpc.UpdateTurnListResponse;
+import com.ford.syncV4.proxy.rpc.VehicleDataResult;
+import com.ford.syncV4.proxy.rpc.enums.AppInterfaceUnregisteredReason;
 import com.ford.syncV4.proxy.rpc.enums.ButtonName;
 import com.ford.syncV4.proxy.rpc.enums.DriverDistractionState;
 import com.ford.syncV4.proxy.rpc.enums.Language;
 import com.ford.syncV4.proxy.rpc.enums.Result;
 import com.ford.syncV4.proxy.rpc.enums.TextAlignment;
+import com.ford.syncV4.proxy.rpc.enums.TriggerSource;
+import com.ford.syncV4.proxy.rpc.enums.VehicleDataActiveStatus;
+import com.ford.syncV4.proxy.rpc.enums.VehicleDataEventStatus;
+import com.ford.syncV4.proxy.rpc.enums.VehicleDataNotificationStatus;
+import com.ford.syncV4.proxy.rpc.enums.VehicleDataResultCode;
+import com.ford.syncV4.proxy.rpc.enums.VehicleDataStatus;
+import com.ford.syncV4.proxy.rpc.enums.VehicleDataType;
 import com.ford.syncV4.util.DebugTool;
 
 public class ProxyService extends Service implements IProxyListenerALM {
@@ -97,6 +109,8 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	private Integer interactionChoiceSetID = 1030;
 	private int lastIndexOfSongChoiceId;
 	private String initChunks, helpChunks, tymoutChunks, displayable;
+	private AppInterfaceUnregisteredReason appInterfaceUnregisteredReason;
+	private RegisterAppInterface appInterface;
 
 	public int getLastIndexOfSongChoiceId() {
 		return lastIndexOfSongChoiceId;
@@ -185,6 +199,13 @@ public class ProxyService extends Service implements IProxyListenerALM {
 					// _syncProxy = new SyncProxyALM(this, appName, isMediaApp);
 					_syncProxy = new SyncProxyALM(this, appName, isMediaApp,
 							Language.EN_US, Language.EN_US, "584421907");
+					appInterface = RPCRequestFactory.buildRegisterAppInterface(appName, true, "584421907");
+					try {
+						_syncProxy.sendRPCRequest(appInterface);
+					} catch (SyncException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 
 				}
 			} catch (SyncException e) {
@@ -249,19 +270,29 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 	private void initializeTheApp() {
 
-		playingAudio = true;
+		if(_syncProxy.getIsConnected()){
+			playingAudio = true;
+			// ButtonSubscriptions
+			initializeButtonsToBeSubscribed();
+			// softButtons Implementation
+			showSoftButtonsOnScreen();
 
-		// ButtonSubscriptions
-		initializeButtonsToBeSubscribed();
-		// softButtons Implementation
-		showSoftButtonsOnScreen();
+			initializeVoiceCommand();
 
-		initializeVoiceCommand();
-
-		//Log.i("Indide the", "Init method4");
-		// ChoiceSet
-		createInteractionChoiceSet();
-		showLockScreen();
+			//Log.i("Indide the", "Init method4");
+			// ChoiceSet
+			createInteractionChoiceSet();
+			showLockScreen();
+		} else {
+			//deleteCommands();
+			try {
+				_syncProxy.show("Not Connected", ";;", TextAlignment.CENTERED, nextCorrID());
+			} catch (SyncException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 
 	}
 
@@ -349,18 +380,18 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		case SYSCTXT_MAIN:
 			break;
 		case SYSCTXT_VRSESSION:
-			try {
-				initializeTheApp();
-			} catch (Exception e) {
-		//		Log.i("SyncProxy", "VRSESSION");
-			}
+//			try {
+//				initializeTheApp();
+//			} catch (Exception e) {
+//		//		Log.i("SyncProxy", "VRSESSION");
+//			}
 			break;
 		case SYSCTXT_MENU:
-			try {
-				initializeTheApp();
-			} catch (Exception e) {
-			//	Log.i("SyncProxy", "MENU");
-			}
+//			try {
+//				initializeTheApp();
+//			} catch (Exception e) {
+//			//	Log.i("SyncProxy", "MENU");
+//			}
 			break;
 		default:
 			return;
@@ -387,17 +418,21 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			isFullCalled = true;
 
 			if (_syncProxy.getAppInterfaceRegistered()) {
+			  if(_syncProxy.getIsConnected()){
 				if (notification.getFirstRun()) {
+						
 					try {
 						_syncProxy.show("Welcome", "Sync Music Player",
 								TextAlignment.CENTERED, nextCorrID());
 				//		Log.i("InFull", "Before Calling initializeTheApp()");
+						
 						initializeTheApp();
 					} catch (SyncException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 
+				}
 				}
 			} else {
 				try {
@@ -407,8 +442,10 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				} catch (SyncException e) {
 					DebugTool.logError("Not Able to send Show", e);
 				}
+				//ClearCache();
 			}
-
+			getApplicationID();
+			
 			break;
 		case HMI_LIMITED:
 		//	Log.i("HMI_LIMITED", "HMI_LIMITED");
@@ -433,11 +470,38 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 	}
 
+	private void getApplicationID(){
+		//appInterface = new RegisterAppInterface();
+		//appInterface.getAppID();
+		
+		String autoActivatedAppID = appInterface.getAppID();
+		Log.i("-", "-"+appInterface.getAppName());
+		Log.i("AppID", "-"+autoActivatedAppID);
+		Log.i("-", "-"+appInterface.getMessageType());
+		Log.i("-", "-"+appInterface.getCorrelationID());
+		Log.i("-", "-"+appInterface.getTtsName());
+		Log.i("-", "-"+appInterface.getIsMediaApplication());
+		Log.i("-", "-"+appInterface.getAppHMIType());
+		Log.i("-", "-"+appInterface.getSyncMsgVersion());
+		
+	}
 	@Override
 	public void onAddCommandResponse(AddCommandResponse addCmdResponse) {
 		// TODO Auto-generated method stub
-	//	Log.i(TAG, addCmdResponse.toString());
+//		Log.i("OnAddCommands", " - "+addCmdResponse.getCorrelationID());
+//		Log.i("Function name", ""+addCmdResponse.getFunctionName());
+//		Log.i("Info", ""+addCmdResponse.getInfo());
+//		Log.i("MessageType", ""+addCmdResponse.getMessageType());
+//		Log.i("Parameters", ""+addCmdResponse.getParameters(addCmdResponse.getFunctionName()));
+//		Log.i("ResultCode", ""+addCmdResponse.getResultCode());
+//		Log.i("Success", ""+addCmdResponse.getSuccess());
 
+	}
+	
+	@Override
+	public void onDeleteCommandResponse(DeleteCommandResponse delCmdResponse) {
+		// TODO Auto-generated method stub
+		Log.i("OnDeleteCommand", "-"+delCmdResponse.getCorrelationID());
 	}
 
 	@Override
@@ -496,11 +560,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		//		+ interactionChoiceSetResponse);
 	}
 
-	@Override
-	public void onDeleteCommandResponse(DeleteCommandResponse delCmdResponse) {
-		// TODO Auto-generated method stub
-		//Log.i("" + delCmdResponse.getFunctionName(),"" + delCmdResponse.getInfo() + "-" + delCmdResponse);
-	}
+	
 
 	@Override
 	public void onDeleteInteractionChoiceSetResponse(
@@ -515,12 +575,13 @@ public class ProxyService extends Service implements IProxyListenerALM {
 //		Log.i("" + delSubMenuResponse.getFunctionName() + "-"
 //				+ delSubMenuResponse.getResultCode(),
 //				"" + delSubMenuResponse.getInfo() + "-" + delSubMenuResponse);
+		Log.i("delSubMenuResponse", "Value -" +delSubMenuResponse.getCorrelationID());
 	}
 
 	@Override
-	public void onGenericResponse(GenericResponse arg0) {
+	public void onGenericResponse(GenericResponse genericResponse) {
 		// TODO Auto-generated method stub
-
+		Log.i("Generic Response", ""+ genericResponse.getInfo());
 	}
 
 	@Override
@@ -645,7 +706,9 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onOnCommand(OnCommand notification) {
 		// TODO Auto-generated method stub
-		//Log.i("notification.getCmdID()", "" + notification.getCmdID());
+		Log.i("TriggerSource", "" + notification.getTriggerSource());
+		//notification.getTriggerSource();
+		
 		switch (notification.getCmdID()) {
 		case 1002:
 			_mainInstance.syncPlayer.start();
@@ -677,7 +740,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			displayable = new String("Available Tracks");
 			PerformInteractionClass.getInstance(ProxyService.this)
 					.performInteraction(initChunks, helpChunks, tymoutChunks,
-							displayable, 1032);
+							displayable, 1031);
 			break;
 		case 1009: // for text to speech
 			initChunks = new String(
@@ -687,7 +750,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			displayable = new String("Get Informations");
 			PerformInteractionClass.getInstance(ProxyService.this)
 					.performInteraction(initChunks, helpChunks, tymoutChunks,
-							displayable, 1033);
+							displayable, 1032);
 			break;
 		default:
 			break;
@@ -875,7 +938,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 						.getPerformInteractionResponse(features);
 			}
 		} else if (choice == getLastIndexOfSongChoiceId() + 3) {
-			String appLink = "Applink is a ford Api to develope appLink enabled App";
+			String appLink = "Applink is a ford A.P.I to develope appLink enabled App";
 			if (appLink.length() > 0) {
 				PerformInteractionResponseClass.getInstance(ProxyService.this)
 						.getPerformInteractionResponse(appLink);
@@ -1125,5 +1188,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		// TODO Auto-generated method stub
 
 	}
+	
+	
 
 }

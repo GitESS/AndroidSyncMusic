@@ -10,6 +10,8 @@ import com.ford.syncV4.util.DebugTool;
 
 public class SyncReceiver extends BroadcastReceiver {
 	static final String TAG = "SyncMusicPlayer";
+	ProxyService serviceInstance = ProxyService.getInstance();
+	
 
 	public void onReceive(Context context, Intent intent) {
 		DebugTool.logInfo("SyncReceiver.onReceive()");
@@ -63,14 +65,17 @@ public class SyncReceiver extends BroadcastReceiver {
 		} else if (intent.getAction().equals(
 				BluetoothAdapter.ACTION_STATE_CHANGED)) {
 			if ((intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) == (BluetoothAdapter.STATE_TURNING_OFF))) {
-				ProxyService serviceInstance = ProxyService.getInstance();
 				if (serviceInstance != null) {
 					Intent stopIntent = new Intent(context, ProxyService.class);
 					stopIntent.putExtras(intent);
 					context.stopService(stopIntent);
 					SyncMainActivity.getInstance().syncPlayer.release();
 				}
-			}
+			} //else {
+//				if(serviceInstance != null && bluetoothDevice.getName().contains("SYNC")){
+//					SyncMainActivity.getInstance().playPauseCurrentPlayingSong();
+//				}
+//			}
 
 			// Listen for phone reboot and start service
 		} else if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
