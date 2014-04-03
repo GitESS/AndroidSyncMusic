@@ -197,15 +197,15 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 				if (transportType == Const.Transport.KEY_BLUETOOTH) {
 					// _syncProxy = new SyncProxyALM(this, appName, isMediaApp);
-					_syncProxy = new SyncProxyALM(this, appName, isMediaApp,
+					_syncProxy = new SyncProxyALM(this, appName, /*isMediaApp*/true,
 							Language.EN_US, Language.EN_US, "584421907");
-					appInterface = RPCRequestFactory.buildRegisterAppInterface(appName, true, "584421907");
-					try {
-						_syncProxy.sendRPCRequest(appInterface);
-					} catch (SyncException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+//					appInterface = RPCRequestFactory.buildRegisterAppInterface(appName, true, "584421907");
+//					try {
+//						_syncProxy.sendRPCRequest(appInterface);
+//					} catch (SyncException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
 
 				}
 			} catch (SyncException e) {
@@ -227,8 +227,8 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		disposeSyncProxy();
 		clearlockscreen();
 		_instance = null;
-		if (_mainInstance.syncPlayer != null)
-			_mainInstance.syncPlayer.release();
+//		if (_mainInstance.syncPlayer != null)
+//			_mainInstance.syncPlayer.release();
 		super.onDestroy();
 
 	}
@@ -444,7 +444,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 				}
 				//ClearCache();
 			}
-			getApplicationID();
+			//getApplicationID();
 			
 			break;
 		case HMI_LIMITED:
@@ -470,21 +470,21 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 	}
 
-	private void getApplicationID(){
-		//appInterface = new RegisterAppInterface();
-		//appInterface.getAppID();
-		
-		String autoActivatedAppID = appInterface.getAppID();
-		Log.i("-", "-"+appInterface.getAppName());
-		Log.i("AppID", "-"+autoActivatedAppID);
-		Log.i("-", "-"+appInterface.getMessageType());
-		Log.i("-", "-"+appInterface.getCorrelationID());
-		Log.i("-", "-"+appInterface.getTtsName());
-		Log.i("-", "-"+appInterface.getIsMediaApplication());
-		Log.i("-", "-"+appInterface.getAppHMIType());
-		Log.i("-", "-"+appInterface.getSyncMsgVersion());
-		
-	}
+//	private void getApplicationID(){
+//		//appInterface = new RegisterAppInterface();
+//		//appInterface.getAppID();
+//		
+//		String autoActivatedAppID = appInterface.getAppID();
+//		Log.i("-", "-"+appInterface.getAppName());
+//		Log.i("AppID", "-"+autoActivatedAppID);
+//		Log.i("-", "-"+appInterface.getMessageType());
+//		Log.i("-", "-"+appInterface.getCorrelationID());
+//		Log.i("-", "-"+appInterface.getTtsName());
+//		Log.i("-", "-"+appInterface.getIsMediaApplication());
+//		Log.i("-", "-"+appInterface.getAppHMIType());
+//		Log.i("-", "-"+appInterface.getSyncMsgVersion());
+//		
+//	}
 	@Override
 	public void onAddCommandResponse(AddCommandResponse addCmdResponse) {
 		// TODO Auto-generated method stub

@@ -71,14 +71,19 @@ public class SyncReceiver extends BroadcastReceiver {
 					context.stopService(stopIntent);
 					SyncMainActivity.getInstance().syncPlayer.release();
 				}
-			} //else {
-//				if(serviceInstance != null && bluetoothDevice.getName().contains("SYNC")){
-//					SyncMainActivity.getInstance().playPauseCurrentPlayingSong();
-//				}
-//			}
-
-			// Listen for phone reboot and start service
-		} else if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
+			} else if((intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) == (BluetoothAdapter.STATE_TURNING_ON))){
+				 mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+				if(serviceInstance != null){	
+				 if (mBtAdapter != null) {
+						if (mBtAdapter.isEnabled()) {
+							Intent startIntent = new Intent(context, ProxyService.class);
+							startIntent.putExtras(intent);
+							context.startService(startIntent);
+						}
+					}
+				}
+			}
+			} else if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
 			mBtAdapter = BluetoothAdapter.getDefaultAdapter();
 			if (mBtAdapter != null) {
 				if (mBtAdapter.isEnabled()) {
