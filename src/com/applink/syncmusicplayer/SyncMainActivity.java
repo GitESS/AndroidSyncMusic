@@ -38,6 +38,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.android.AsyncFacebookRunner;
+import com.facebook.android.DialogError;
+import com.facebook.android.Facebook;
+import com.facebook.android.Facebook.DialogListener;
+import com.facebook.android.FacebookError;
 import com.ford.syncV4.exception.SyncException;
 import com.ford.syncV4.proxy.SyncProxyALM;
 import com.ford.syncV4.proxy.rpc.enums.ButtonName;
@@ -80,6 +85,14 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	Button exit;
 	public static final String logTag = "SyncMusicPlayer";
 	private static SyncMainActivity _activity;
+	//Facebook integration
+	private static String APP_ID = "1401760796762744"; //App ID
+	 
+    // Instance of Facebook Class
+    private Facebook facebook;
+    private AsyncFacebookRunner mAsyncRunner;
+    String FILENAME = "AndroidSSO_data";
+    SharedPreferences mPrefs;
 
 	/**
 	 * In onCreate() specifies if it is the first time the activity is created
@@ -95,9 +108,12 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		this.currentPlayingSongIndex = currentPlayingSongIndex;
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		facebook = new Facebook(APP_ID);
+        mAsyncRunner = new AsyncFacebookRunner(facebook);
 
 		startSyncProxy();
 		_activity = this;
@@ -325,23 +341,34 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 
 			@Override
 			public void onClick(View arg0) {
-				if (isShuffle) {
-					isShuffle = false;
-					Toast.makeText(getApplicationContext(), "Shuffle is OFF",
-							Toast.LENGTH_SHORT).show();
-					btnShuffle.setImageResource(R.drawable.btn_shuffle);
-				} else {
-					// make repeat to true
-					isShuffle = true;
-					Toast.makeText(getApplicationContext(), "Shuffle is ON",
-							Toast.LENGTH_SHORT).show();
-					// make shuffle to false
-					isRepeat = false;
-					btnShuffle.setImageResource(R.drawable.btn_shuffle_focused);
-					btnRepeat.setImageResource(R.drawable.btn_repeat);
-				}
-				Toast.makeText(_activity, "Option is Disabled for now!",
-						Toast.LENGTH_SHORT).show();
+				postToWall();
+			}
+//				if (isShuffle) {
+//					isShuffle = false;
+//					Toast.makeText(getApplicationContext(), "Shuffle is OFF",
+//							Toast.LENGTH_SHORT).show();
+//					btnShuffle.setImageResource(R.drawable.btn_shuffle);
+//				} else {
+//					// make repeat to true
+//					isShuffle = true;
+//					Toast.makeText(getApplicationContext(), "Shuffle is ON",
+//							Toast.LENGTH_SHORT).show();
+//					// make shuffle to false
+//					isRepeat = false;
+//					btnShuffle.setImageResource(R.drawable.btn_shuffle_focused);
+//					btnRepeat.setImageResource(R.drawable.btn_repeat);
+//				}
+//				Toast.makeText(_activity, "Option is Disabled for now!",
+//						Toast.LENGTH_SHORT).show();
+//			}
+		});
+		
+		btnPlaylist.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				shareOnFacebook();
 			}
 		});
 
@@ -863,5 +890,83 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			}
 		}
 		return false;
+	}
+	
+	@SuppressWarnings("deprecation")
+	public void shareOnFacebook(){
+		  mPrefs = getPreferences(MODE_PRIVATE);
+		String access_token = mPrefs.getString("access_token", null);
+		long expires = mPrefs.getLong("access_expires", 0);
+		if (access_token != null) {
+	        facebook.setAccessToken(access_token);
+	    }
+	 
+	    if (expires != 0) {
+	        facebook.setAccessExpires(expires);
+	    }
+	    if(!facebook.isSessionValid()){
+	    	facebook.authorize(SyncMainActivity.this, new String[] {"email", "Publish Stream"}, new DialogListener() {
+				
+				@Override
+				public void onFacebookError(FacebookError e) {
+					// TODO Auto-generated method stub
+					
+				}
+				
+				@Override
+				public void onError(DialogError e) {
+					// TODO Auto-generated method stub
+					
+				}
+				
+				@Override
+				public void onComplete(Bundle values) {
+					// TODO Auto-generated method stub
+					// Function to handle complete event
+                    // Edit Preferences and update facebook acess_token
+                    SharedPreferences.Editor editor = mPrefs.edit();
+                    editor.putString("access_token",
+                            facebook.getAccessToken());
+                    editor.putLong("access_expires",
+                            facebook.getAccessExpires());
+                    editor.commit();
+				}
+				
+				@Override
+				public void onCancel() {
+					// TODO Auto-generated method stub
+					
+				}
+			});
+	    }
+	}
+	
+	public void postToWall(){
+		facebook.dialog(this, "feed", new DialogListener() {
+			
+			@Override
+			public void onFacebookError(FacebookError e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onError(DialogError e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onComplete(Bundle values) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onCancel() {
+				// TODO Auto-generated method stub
+				
+			}
+		});
 	}
 }

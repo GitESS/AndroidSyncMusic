@@ -51,10 +51,9 @@ public class SyncReceiver extends BroadcastReceiver {
 					context.stopService(stopIntent);
 				}
 				try{
-					
-				SyncMainActivity.getInstance().finish();	
 				LockScreenActivity.getInstance().finish();
-				ProxyService.getProxyInstance().resetProxy();
+				SyncMainActivity.getInstance().syncPlayer.release();
+				ProxyService.getProxyInstance().dispose();
 				}catch(Exception e){
 					Log.i("SyncReceiver", e.toString());
 				}
