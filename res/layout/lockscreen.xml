@@ -14,11 +14,21 @@
         android:text="Exit"
         android:textSize="20sp"
         android:visibility="visible" />
-    
+
     <ImageView
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:src="@drawable/esslogo" />
+
+    <Button
+        android:id="@+id/share"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:text="@string/share_content" />
 
     <ImageView
         android:layout_width="match_parent"

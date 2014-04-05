@@ -941,6 +941,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	    }
 	}
 	
+	@SuppressWarnings("deprecation")
 	public void postToWall(){
 		facebook.dialog(this, "feed", new DialogListener() {
 			

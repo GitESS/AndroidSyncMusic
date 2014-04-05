@@ -262,17 +262,17 @@ containing a value of this type.
         public static final int track_info_bg=0x7f02004b;
     }
     public static final class id {
-        public static final int TextView01=0x7f04002e;
-        public static final int action_settings=0x7f040037;
-        public static final int btnBackward=0x7f040022;
-        public static final int btnForward=0x7f040024;
-        public static final int btnNext=0x7f040025;
-        public static final int btnPlay=0x7f040023;
-        public static final int btnPlaylist=0x7f04001e;
-        public static final int btnPrevious=0x7f040021;
-        public static final int btnRepeat=0x7f04002a;
-        public static final int btnShuffle=0x7f04002b;
-        public static final int button_exit=0x7f04001c;
+        public static final int TextView01=0x7f04002f;
+        public static final int action_settings=0x7f040038;
+        public static final int btnBackward=0x7f040023;
+        public static final int btnForward=0x7f040025;
+        public static final int btnNext=0x7f040026;
+        public static final int btnPlay=0x7f040024;
+        public static final int btnPlaylist=0x7f04001f;
+        public static final int btnPrevious=0x7f040022;
+        public static final int btnRepeat=0x7f04002b;
+        public static final int btnShuffle=0x7f04002c;
+        public static final int button_exit=0x7f04001d;
         public static final int com_facebook_login_activity_progress_bar=0x7f040005;
         public static final int com_facebook_picker_activity_circle=0x7f040004;
         public static final int com_facebook_picker_checkbox=0x7f040007;
@@ -298,26 +298,27 @@ containing a value of this type.
         public static final int lockreset=0x7f04001a;
         public static final int normal=0x7f040001;
         public static final int picker_subtitle=0x7f040012;
-        public static final int player_footer_bg=0x7f040020;
-        public static final int player_header_bg=0x7f04001b;
-        public static final int properties_Root=0x7f04002d;
-        public static final int properties_appName=0x7f04002f;
-        public static final int properties_checkAutoReconnect=0x7f040036;
-        public static final int properties_checkMedia=0x7f040030;
-        public static final int properties_ipAddr=0x7f040034;
-        public static final int properties_radioBT=0x7f040033;
-        public static final int properties_radioGroupTransport=0x7f040031;
-        public static final int properties_radioWiFi=0x7f040032;
-        public static final int properties_tcpPort=0x7f040035;
-        public static final int scrollView1=0x7f04002c;
+        public static final int player_footer_bg=0x7f040021;
+        public static final int player_header_bg=0x7f04001c;
+        public static final int properties_Root=0x7f04002e;
+        public static final int properties_appName=0x7f040030;
+        public static final int properties_checkAutoReconnect=0x7f040037;
+        public static final int properties_checkMedia=0x7f040031;
+        public static final int properties_ipAddr=0x7f040035;
+        public static final int properties_radioBT=0x7f040034;
+        public static final int properties_radioGroupTransport=0x7f040032;
+        public static final int properties_radioWiFi=0x7f040033;
+        public static final int properties_tcpPort=0x7f040036;
+        public static final int scrollView1=0x7f04002d;
+        public static final int share=0x7f04001b;
         public static final int small=0x7f040000;
-        public static final int songCurrentDurationLabel=0x7f040028;
-        public static final int songProgressBar=0x7f040026;
-        public static final int songThumbnail=0x7f04001f;
-        public static final int songTitle=0x7f04001d;
-        public static final int songTotalDurationLabel=0x7f040029;
+        public static final int songCurrentDurationLabel=0x7f040029;
+        public static final int songProgressBar=0x7f040027;
+        public static final int songThumbnail=0x7f040020;
+        public static final int songTitle=0x7f04001e;
+        public static final int songTotalDurationLabel=0x7f04002a;
         public static final int textDialog=0x7f040018;
-        public static final int timerDisplay=0x7f040027;
+        public static final int timerDisplay=0x7f040028;
     }
     public static final class layout {
         public static final int activity_sync_main=0x7f030000;
@@ -349,7 +350,7 @@ containing a value of this type.
         public static final int sync_main=0x7f090000;
     }
     public static final class string {
-        public static final int action_settings=0x7f07001a;
+        public static final int action_settings=0x7f07001b;
         public static final int app_name=0x7f070019;
         public static final int com_facebook_choose_friends=0x7f07000f;
         public static final int com_facebook_dialogloginactivity_ok_button=0x7f070000;
@@ -376,7 +377,8 @@ containing a value of this type.
         public static final int com_facebook_usersettingsfragment_log_in_button=0x7f070008;
         public static final int com_facebook_usersettingsfragment_logged_in=0x7f070009;
         public static final int com_facebook_usersettingsfragment_not_logged_in=0x7f07000a;
-        public static final int hello_world=0x7f07001b;
+        public static final int hello_world=0x7f07001c;
+        public static final int share_content=0x7f07001a;
     }
     public static final class style {
         /** 

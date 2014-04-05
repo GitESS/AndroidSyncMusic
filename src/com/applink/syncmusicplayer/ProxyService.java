@@ -538,112 +538,117 @@ public class ProxyService extends Service implements IProxyListenerALM {
 	@Override
 	public void onOnButtonPress(OnButtonPress notification) {
 		// TODO Auto-generated method stub
-		//Log.i(TAG, "" + notification);
+		Log.i(TAG, "" + notification.getCustomButtonName());
+		
+		if (notification.getCustomButtonName() == null){
+			audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+			switch (notification.getButtonName()) {
+			case OK:
+				_mainInstance.playPauseCurrentPlayingSong();
+				break;
+			case SEEKLEFT:
+				_mainInstance.seekBackwardCurrentPlayingSong();
+				break;
+			case SEEKRIGHT:
+				_mainInstance.seekForwardCurrentPlayingSong();
+				break;
+			case TUNEUP:
+				audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+						AudioManager.ADJUST_RAISE, AudioManager.FLAG_VIBRATE);
+				break;
+			case TUNEDOWN:
+				audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+						AudioManager.ADJUST_LOWER, AudioManager.FLAG_VIBRATE);
+				break;
+			case PRESET_0:
+				// SubscribeVehicleDataClass.getInstance(ProxyService.this,
+				// 0).getVehicleData();
+				_mainInstance.playCurrentSong(0);
+				break;
+			case PRESET_1:
+				// SubscribeVehicleDataClass.getInstance(ProxyService.this,
+				// 1).getVehicleData();
+				_mainInstance.playCurrentSong(1);
+				break;
+			case PRESET_2:
+				// SubscribeVehicleDataClass.getInstance(ProxyService.this,
+				// 2).getVehicleData();
+				_mainInstance.playCurrentSong(2);
+				break;
+			case PRESET_3:
+				_mainInstance.playCurrentSong(3);
+				break;
+			case PRESET_4:
+				_mainInstance.playCurrentSong(4);
+				break;
+			case PRESET_5:
+				_mainInstance.playCurrentSong(5);
+				break;
+			case PRESET_6:
+				_mainInstance.playCurrentSong(6);
+				break;
+			case PRESET_7:
+				_mainInstance.playCurrentSong(7);
+				break;
+			case PRESET_8:
+				_mainInstance.playCurrentSong(8);
+				break;
+			case PRESET_9:
+				_mainInstance.playCurrentSong(9);
+				break;
 
-		audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+			default:
+				break;
+			}
 
-		switch (notification.getButtonName()) {
-		case OK:
-			_mainInstance.playPauseCurrentPlayingSong();
-			break;
-		case SEEKLEFT:
-			_mainInstance.seekBackwardCurrentPlayingSong();
-			break;
-		case SEEKRIGHT:
-			_mainInstance.seekForwardCurrentPlayingSong();
-			break;
-		case TUNEUP:
-			audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-					AudioManager.ADJUST_RAISE, AudioManager.FLAG_VIBRATE);
-			break;
-		case TUNEDOWN:
-			audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-					AudioManager.ADJUST_LOWER, AudioManager.FLAG_VIBRATE);
-			break;
-		case PRESET_0:
-			// SubscribeVehicleDataClass.getInstance(ProxyService.this,
-			// 0).getVehicleData();
-			_mainInstance.playCurrentSong(0);
-			break;
-		case PRESET_1:
-			// SubscribeVehicleDataClass.getInstance(ProxyService.this,
-			// 1).getVehicleData();
-			_mainInstance.playCurrentSong(1);
-			break;
-		case PRESET_2:
-			// SubscribeVehicleDataClass.getInstance(ProxyService.this,
-			// 2).getVehicleData();
-			_mainInstance.playCurrentSong(2);
-			break;
-		case PRESET_3:
-			_mainInstance.playCurrentSong(3);
-			break;
-		case PRESET_4:
-			_mainInstance.playCurrentSong(4);
-			break;
-		case PRESET_5:
-			_mainInstance.playCurrentSong(5);
-			break;
-		case PRESET_6:
-			_mainInstance.playCurrentSong(6);
-			break;
-		case PRESET_7:
-			_mainInstance.playCurrentSong(7);
-			break;
-		case PRESET_8:
-			_mainInstance.playCurrentSong(8);
-			break;
-		case PRESET_9:
-			_mainInstance.playCurrentSong(9);
-			break;
+		} else {
+			// Handling softButtons notifications-- 6 softbuttons cmd are albumList,
+			// SongList, Song info, app info, applink info, command info
 
-		default:
-			break;
+			if (notification.getCustomButtonName().equals(100)) {
+				String msg = "Next";
+				AlertClass.getInstance(ProxyService.this).getAlert("Next", 3000,
+						msg);
+				SyncMainActivity.getInstance().jumpToNextSong();
+
+			} else if (notification.getCustomButtonName().equals(101)) {
+				String msg = "Previous";
+				AlertClass.getInstance(ProxyService.this).getAlert("Previous",
+						3000, msg);
+				SyncMainActivity.getInstance().jumpToPreviousSong();
+			} else if (notification.getCustomButtonName().equals(102)) {
+				String msg = "This is a Applink enabled music player application, designed to run on Ford's Sync. All commands of this application are Voice based.";
+				AlertClass.getInstance(ProxyService.this).getAlert("Appinfo", 3000,
+						msg);
+				// SyncMainActivity.getInstance().seekBackwardCurrentPlayingSong();
+			} else if (notification.getCustomButtonName().equals(103)) {
+				String msg = "Applink is a Ford's API which is used to make Android or iOS application Applink enabled.";
+				AlertClass.getInstance(ProxyService.this).getAlert("Appinfo", 3000,
+						msg);
+
+			} else if (notification.getCustomButtonName().equals(104)) {
+				String msg = "Four Main Commands are available in this Music application. Apart from Play and pause commands. +"
+						+ "There are Next, Previous, Seek forward and Seek Backward commands are vailable as well. These commmands are also available in Voice recognition and Sub Menu CMD forms";
+				AlertClass.getInstance(ProxyService.this).getAlert("Appinfo", 3000,
+						msg);
+
+			} else if (notification.getCustomButtonName().equals(105)) {
+				String scrollableMessageBody = new String(
+						"This is Applink enabled Application. This Player has Voice command. User can give voice command to operate this player. Available Voice commands are Play, Pause, Next, Previous, Backward and forwards. This Player has Voice command. User can give voice command to operate this player. Available Voice commands are Play, Pause, Next, Previous, Backward and forwards");
+				ScrollableMessageClass.getInstance(ProxyService.this)
+						.getScrollableMessage(scrollableMessageBody);
+
+			} else if (notification.getCustomButtonName().equals(106)) {
+				PerformAudioPassThruClass.getInstance(ProxyService.this).show();
+			} else if (notification.getCustomButtonName().equals(107)) {
+				SubscribeVehicleDataClass.getInstance(ProxyService.this, 2)
+						.getVehicleData();
+
+			}
 		}
 
-		// Handling softButtons notifications-- 6 softbuttons cmd are albumList,
-		// SongList, Song info, app info, applink info, command info
-
-		if (notification.getCustomButtonName().equals(100)) {
-			String msg = "Next";
-			AlertClass.getInstance(ProxyService.this).getAlert("Next", 3000,
-					msg);
-			SyncMainActivity.getInstance().jumpToNextSong();
-
-		} else if (notification.getCustomButtonName().equals(101)) {
-			String msg = "Previous";
-			AlertClass.getInstance(ProxyService.this).getAlert("Previous",
-					3000, msg);
-			SyncMainActivity.getInstance().jumpToPreviousSong();
-		} else if (notification.getCustomButtonName().equals(102)) {
-			String msg = "This is a Applink enabled music player application, designed to run on Ford's Sync. All commands of this application are Voice based.";
-			AlertClass.getInstance(ProxyService.this).getAlert("Appinfo", 3000,
-					msg);
-			// SyncMainActivity.getInstance().seekBackwardCurrentPlayingSong();
-		} else if (notification.getCustomButtonName().equals(103)) {
-			String msg = "Applink is a Ford's API which is used to make Android or iOS application Applink enabled.";
-			AlertClass.getInstance(ProxyService.this).getAlert("Appinfo", 3000,
-					msg);
-
-		} else if (notification.getCustomButtonName().equals(104)) {
-			String msg = "Four Main Commands are available in this Music application. Apart from Play and pause commands. +"
-					+ "There are Next, Previous, Seek forward and Seek Backward commands are vailable as well. These commmands are also available in Voice recognition and Sub Menu CMD forms";
-			AlertClass.getInstance(ProxyService.this).getAlert("Appinfo", 3000,
-					msg);
-
-		} else if (notification.getCustomButtonName().equals(105)) {
-			String scrollableMessageBody = new String(
-					"This is Applink enabled Application. This Player has Voice command. User can give voice command to operate this player. Available Voice commands are Play, Pause, Next, Previous, Backward and forwards. This Player has Voice command. User can give voice command to operate this player. Available Voice commands are Play, Pause, Next, Previous, Backward and forwards");
-			ScrollableMessageClass.getInstance(ProxyService.this)
-					.getScrollableMessage(scrollableMessageBody);
-
-		} else if (notification.getCustomButtonName().equals(106)) {
-			PerformAudioPassThruClass.getInstance(ProxyService.this).show();
-		} else if (notification.getCustomButtonName().equals(107)) {
-			SubscribeVehicleDataClass.getInstance(ProxyService.this, 2)
-					.getVehicleData();
-
-		}
+		
+		
 
 	}
 
@@ -1115,25 +1120,21 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		return lockscreenUP;
 	}
 
-	@Override
 	public void onAlertManeuverResponse(AlertManeuverResponse arg0) {
 		// TODO Auto-generated method stub
 
 	}
 
-	@Override
 	public void onOnTBTClientState(OnTBTClientState arg0) {
 		// TODO Auto-generated method stub
 
 	}
 
-	@Override
 	public void onShowConstantTBTResponse(ShowConstantTBTResponse arg0) {
 		// TODO Auto-generated method stub
 
 	}
 
-	@Override
 	public void onUpdateTurnListResponse(UpdateTurnListResponse arg0) {
 		// TODO Auto-generated method stub
 
