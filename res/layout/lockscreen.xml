@@ -35,5 +35,8 @@
         android:layout_height="fill_parent"
         android:layout_gravity="bottom"
         android:src="@drawable/sync" />
+    <TextView android:id="@+id/welcome"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"/>
 
 </LinearLayout>

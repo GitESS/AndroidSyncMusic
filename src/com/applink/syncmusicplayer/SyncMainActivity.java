@@ -1,6 +1,10 @@
 package com.applink.syncmusicplayer;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -18,10 +22,16 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,11 +48,19 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.FacebookException;
+import com.facebook.Request;
+import com.facebook.Response;
+import com.facebook.Session;
+import com.facebook.SessionState;
 import com.facebook.android.AsyncFacebookRunner;
 import com.facebook.android.DialogError;
 import com.facebook.android.Facebook;
-import com.facebook.android.Facebook.DialogListener;
 import com.facebook.android.FacebookError;
+import com.facebook.android.Facebook.DialogListener;
+import com.facebook.model.GraphUser;
+import com.facebook.widget.WebDialog;
+import com.facebook.widget.WebDialog.OnCompleteListener;
 import com.ford.syncV4.exception.SyncException;
 import com.ford.syncV4.proxy.SyncProxyALM;
 import com.ford.syncV4.proxy.rpc.enums.ButtonName;
@@ -87,12 +105,10 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	private static SyncMainActivity _activity;
 	//Facebook integration
 	private static String APP_ID = "1401760796762744"; //App ID
-	 
-    // Instance of Facebook Class
-    private Facebook facebook;
-    private AsyncFacebookRunner mAsyncRunner;
-    String FILENAME = "AndroidSSO_data";
-    SharedPreferences mPrefs;
+	private Facebook facebook;
+	private AsyncFacebookRunner mSyncRunner;
+	private SharedPreferences mPrefs;
+	
 
 	/**
 	 * In onCreate() specifies if it is the first time the activity is created
@@ -112,9 +128,6 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		facebook = new Facebook(APP_ID);
-        mAsyncRunner = new AsyncFacebookRunner(facebook);
-
 		startSyncProxy();
 		_activity = this;
 
@@ -122,6 +135,24 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		setAllMusicPlayerButtons();
 
 		isFirstActivityRun = false;
+		
+		facebook = new Facebook(APP_ID);
+		mSyncRunner = new AsyncFacebookRunner(facebook);
+		
+		try {
+			PackageInfo info = getPackageManager().getPackageInfo("com.facebook.samples.hellofacebook", PackageManager.GET_SIGNATURES);
+			for (Signature signature : info.signatures) {
+	            MessageDigest md = MessageDigest.getInstance("SHA");
+	            md.update(signature.toByteArray());
+	            Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
+	            }
+		} catch (NameNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		Bundle b;
 		b = getIntent().getExtras();
@@ -341,7 +372,8 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 
 			@Override
 			public void onClick(View arg0) {
-				postToWall();
+				//postToWall();
+				shareContent();
 			}
 //				if (isShuffle) {
 //					isShuffle = false;
@@ -368,7 +400,8 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				shareOnFacebook();
+				//shareOnFB();
+				publishContents();
 			}
 		});
 
@@ -892,82 +925,138 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		return false;
 	}
 	
-	@SuppressWarnings("deprecation")
-	public void shareOnFacebook(){
-		  mPrefs = getPreferences(MODE_PRIVATE);
-		String access_token = mPrefs.getString("access_token", null);
-		long expires = mPrefs.getLong("access_expires", 0);
-		if (access_token != null) {
-	        facebook.setAccessToken(access_token);
-	    }
+	public void postToWall(){
+		facebook.dialog(this, "feed", new DialogListener() {
+			 
+	        @Override
+	        public void onFacebookError(FacebookError e) {
+	        }
 	 
+	        @Override
+	        public void onError(DialogError e) {
+	        }
+	 
+	        @Override
+	        public void onComplete(Bundle values) {
+	        }
+	 
+	        @Override
+	        public void onCancel() {
+	        }
+	    });
+	}
+	
+	public void shareOnFB(){
+		mPrefs = getPreferences(MODE_PRIVATE);
+	    String access_token = mPrefs.getString("access_token", null);
+	    long expires = mPrefs.getLong("access_expires", 0);
+	    if(access_token != null){
+	    	facebook.setAccessToken(access_token);
+	    }
 	    if (expires != 0) {
 	        facebook.setAccessExpires(expires);
 	    }
+	    
 	    if(!facebook.isSessionValid()){
-	    	facebook.authorize(SyncMainActivity.this, new String[] {"email", "Publish Stream"}, new DialogListener() {
+	    	facebook.authorize(SyncMainActivity.this, new String[] { "email", "publish_stream" }, new DialogListener() {
 				
-				@Override
 				public void onFacebookError(FacebookError e) {
 					// TODO Auto-generated method stub
 					
 				}
 				
-				@Override
 				public void onError(DialogError e) {
 					// TODO Auto-generated method stub
 					
 				}
 				
-				@Override
 				public void onComplete(Bundle values) {
 					// TODO Auto-generated method stub
-					// Function to handle complete event
-                    // Edit Preferences and update facebook acess_token
-                    SharedPreferences.Editor editor = mPrefs.edit();
-                    editor.putString("access_token",
+					SharedPreferences.Editor  editor = mPrefs.edit();
+					editor.putString("access_token",
                             facebook.getAccessToken());
                     editor.putLong("access_expires",
                             facebook.getAccessExpires());
                     editor.commit();
+                    
+                   // postToWall();
+                    
 				}
 				
-				@Override
 				public void onCancel() {
 					// TODO Auto-generated method stub
 					
 				}
 			});
 	    }
+	    
 	}
 	
-	@SuppressWarnings("deprecation")
-	public void postToWall(){
-		facebook.dialog(this, "feed", new DialogListener() {
+	public void publishContents(){
+		Session.openActiveSession(SyncMainActivity.this, true, new Session.StatusCallback() {
 			
+			@SuppressWarnings("deprecation")
 			@Override
-			public void onFacebookError(FacebookError e) {
+			public void call(Session session, SessionState state, Exception exception) {
 				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void onError(DialogError e) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void onComplete(Bundle values) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void onCancel() {
-				// TODO Auto-generated method stub
-				
+				if(session.isOpened()){
+					Request.executeMeRequestAsync(session, new Request.GraphUserCallback() {
+						
+						@Override
+						public void onCompleted(GraphUser user, Response response) {
+							// TODO Auto-generated method stub
+							if(user !=null){
+								TextView welcome = (TextView) findViewById(R.id.welcome);
+				                welcome.setText("Hello " + user.getName() + "!");
+							}
+						}
+					});
+				}
 			}
 		});
 	}
+	
+	 @Override
+	  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+	      super.onActivityResult(requestCode, resultCode, data);
+	      Session.getActiveSession().onActivityResult(this, requestCode, resultCode, data);
+	  }
+	 
+	 public void shareContent(){
+		// Set the dialog parameters
+		    Bundle params = new Bundle();
+		    params.putString("name", "SyncMusicPlayer");
+		    params.putString("caption", "Publish test");
+		    params.putString("description", "Applink test");
+		    params.putString("link", "No link ava");
+		    params.putString("picture", "Coming soon");
+
+		    // Invoke the dialog
+		    WebDialog feedDialog = (
+		        new WebDialog.FeedDialogBuilder(getApplicationContext(),
+		            Session.getActiveSession(),
+		            params))
+		        .setOnCompleteListener(new OnCompleteListener() {
+		            @Override
+		            public void onComplete(Bundle values,
+		                FacebookException error) {
+		                if (error == null) {
+		                    // When the story is posted, echo the success
+		                    // and the post Id.
+		                    final String postId = values.getString("post_id");
+		                    if (postId != null) {
+		                        Toast.makeText(getApplicationContext(),
+		                            "Story published: "+postId,
+		                        Toast.LENGTH_SHORT).show();
+		                    }
+		                }
+		            }
+
+
+		        })
+		        .build();
+		    feedDialog.show();
+	 }
+	
+	
 }

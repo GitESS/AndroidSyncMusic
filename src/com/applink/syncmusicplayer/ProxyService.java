@@ -702,10 +702,10 @@ public class ProxyService extends Service implements IProxyListenerALM {
 							displayable, 1032);
 			break;
 		case 1010: 
-			_mainInstance.shareOnFacebook();
+			SyncMainActivity.getInstance().publishContents();
 			break;
 		case 1011:
-			_mainInstance.postToWall();
+			SyncMainActivity.getInstance().postToWall();
 			break;
 		default:
 			break;
