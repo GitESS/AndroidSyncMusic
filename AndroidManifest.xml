@@ -54,8 +54,8 @@
                 <action android:name="android.bluetooth.adapter.action.STATE_CHANGED" />
             </intent-filter>
         </receiver>
- <meta-data android:name="com.facebook.sdk.ApplicationId" 
-     android:value="@string/app_id"/>
+	 <meta-data android:name="com.facebook.sdk.ApplicationId" 
+     android:value="1401760796762744"/>
     </application>
 
 </manifest>

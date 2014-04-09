@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Set;
@@ -108,6 +109,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	private Facebook facebook;
 	private AsyncFacebookRunner mSyncRunner;
 	private SharedPreferences mPrefs;
+	Session.StatusCallback mCallback;
 	
 
 	/**
@@ -402,6 +404,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 				// TODO Auto-generated method stub
 				//shareOnFB();
 				publishContents();
+				//new FaccebookLogin();
 			}
 		});
 
@@ -946,74 +949,78 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	    });
 	}
 	
-	public void shareOnFB(){
-		mPrefs = getPreferences(MODE_PRIVATE);
-	    String access_token = mPrefs.getString("access_token", null);
-	    long expires = mPrefs.getLong("access_expires", 0);
-	    if(access_token != null){
-	    	facebook.setAccessToken(access_token);
-	    }
-	    if (expires != 0) {
-	        facebook.setAccessExpires(expires);
-	    }
-	    
-	    if(!facebook.isSessionValid()){
-	    	facebook.authorize(SyncMainActivity.this, new String[] { "email", "publish_stream" }, new DialogListener() {
-				
-				public void onFacebookError(FacebookError e) {
-					// TODO Auto-generated method stub
-					
-				}
-				
-				public void onError(DialogError e) {
-					// TODO Auto-generated method stub
-					
-				}
-				
-				public void onComplete(Bundle values) {
-					// TODO Auto-generated method stub
-					SharedPreferences.Editor  editor = mPrefs.edit();
-					editor.putString("access_token",
-                            facebook.getAccessToken());
-                    editor.putLong("access_expires",
-                            facebook.getAccessExpires());
-                    editor.commit();
-                    
-                   // postToWall();
-                    
-				}
-				
-				public void onCancel() {
-					// TODO Auto-generated method stub
-					
-				}
-			});
-	    }
-	    
-	}
+//	public void shareOnFB(){
+//		mPrefs = getPreferences(MODE_PRIVATE);
+//	    String access_token = mPrefs.getString("access_token", null);
+//	    long expires = mPrefs.getLong("access_expires", 0);
+//	    if(access_token != null){
+//	    	facebook.setAccessToken(access_token);
+//	    }
+//	    if (expires != 0) {
+//	        facebook.setAccessExpires(expires);
+//	    }
+//	    
+//	    if(!facebook.isSessionValid()){
+//	    	facebook.authorize(SyncMainActivity.this, new String[] { "email", "publish_stream" }, new DialogListener() {
+//				
+//				public void onFacebookError(FacebookError e) {
+//					// TODO Auto-generated method stub
+//					
+//				}
+//				
+//				public void onError(DialogError e) {
+//					// TODO Auto-generated method stub
+//					
+//				}
+//				
+//				public void onComplete(Bundle values) {
+//					// TODO Auto-generated method stub
+//					SharedPreferences.Editor  editor = mPrefs.edit();
+//					editor.putString("access_token",
+//                            facebook.getAccessToken());
+//                    editor.putLong("access_expires",
+//                            facebook.getAccessExpires());
+//                    editor.commit();
+//                    
+//                   // postToWall();
+//                    
+//				}
+//				
+//				public void onCancel() {
+//					// TODO Auto-generated method stub
+//					
+//				}
+//			});
+//	    }
+//	    
+//	}
 	
 	public void publishContents(){
-		Session.openActiveSession(SyncMainActivity.this, true, new Session.StatusCallback() {
-			
-			@SuppressWarnings("deprecation")
-			@Override
-			public void call(Session session, SessionState state, Exception exception) {
-				// TODO Auto-generated method stub
-				if(session.isOpened()){
-					Request.executeMeRequestAsync(session, new Request.GraphUserCallback() {
-						
-						@Override
-						public void onCompleted(GraphUser user, Response response) {
-							// TODO Auto-generated method stub
-							if(user !=null){
-								TextView welcome = (TextView) findViewById(R.id.welcome);
-				                welcome.setText("Hello " + user.getName() + "!");
-							}
-						}
-					});
-				}
-			}
-		});
+		Session s = new Session.Builder(this).setApplicationId(APP_ID).build();
+		Session.setActiveSession(s);
+		Session.OpenRequest request = new Session.OpenRequest(this);
+		request.setPermissions(Arrays.asList("basic_info","email", "publish_stream"));
+		request.setCallback( new Session.StatusCallback() {
+		   // callback when session changes state
+		             @Override
+		             public void call(Session session, SessionState state, Exception exception) {
+		                 if (session.isOpened()) {
+		                     Request.newMeRequest(session, new Request.GraphUserCallback() {
+		                         @Override
+		                         public void onCompleted(GraphUser user, Response response) {
+		                             if (user != null) {
+
+		Toast.makeText(getApplicationContext(), "User email is:"+user.getProperty("email"), Toast.LENGTH_SHORT).show(); } 
+		else {
+		Toast.makeText(getApplicationContext(), "Error User Null", Toast.LENGTH_SHORT).show();
+		}
+		}
+		}).executeAsync();
+		} 
+		             }
+		         }); //end of call;
+
+		s.openForRead(request);
 	}
 	
 	 @Override
@@ -1045,6 +1052,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		                    // and the post Id.
 		                    final String postId = values.getString("post_id");
 		                    if (postId != null) {
+		                    	Log.i("Story published", "IDpost"+ postId);
 		                        Toast.makeText(getApplicationContext(),
 		                            "Story published: "+postId,
 		                        Toast.LENGTH_SHORT).show();
