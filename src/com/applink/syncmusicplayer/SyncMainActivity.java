@@ -141,20 +141,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		facebook = new Facebook(APP_ID);
 		mSyncRunner = new AsyncFacebookRunner(facebook);
 		
-		try {
-			PackageInfo info = getPackageManager().getPackageInfo("com.facebook.samples.hellofacebook", PackageManager.GET_SIGNATURES);
-			for (Signature signature : info.signatures) {
-	            MessageDigest md = MessageDigest.getInstance("SHA");
-	            md.update(signature.toByteArray());
-	            Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
-	            }
-		} catch (NameNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 
 		Bundle b;
 		b = getIntent().getExtras();
@@ -996,10 +983,27 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 //	}
 	
 	public void publishContents(){
+		try {
+			PackageInfo info = getPackageManager().getPackageInfo("com.facebook.scrumptious", PackageManager.GET_SIGNATURES);
+			for (Signature signature : info.signatures) {
+	            MessageDigest md = MessageDigest.getInstance("SHA");
+	            md.update(signature.toByteArray());
+	            Log.d("Digest:", Base64.encodeToString(md.digest(), 0));
+	            }
+		} catch (NameNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+				
 		Session s = new Session.Builder(this).setApplicationId(APP_ID).build();
+		Log.d("KeyHash:", ""+APP_ID);
 		Session.setActiveSession(s);
 		Session.OpenRequest request = new Session.OpenRequest(this);
-		request.setPermissions(Arrays.asList("basic_info","email", "publish_stream"));
+		request.setPermissions(Arrays.asList("basic_info","email"));
 		request.setCallback( new Session.StatusCallback() {
 		   // callback when session changes state
 		             @Override
