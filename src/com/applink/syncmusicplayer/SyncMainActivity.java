@@ -105,7 +105,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	public static final String logTag = "SyncMusicPlayer";
 	private static SyncMainActivity _activity;
 	//Facebook integration
-	private static String APP_ID = "1401760796762744"; //App ID
+	private static String APP_ID = "717599151625010"; //App ID
 	private Facebook facebook;
 	private AsyncFacebookRunner mSyncRunner;
 	private SharedPreferences mPrefs;
@@ -357,31 +357,13 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		/**
 		 * Button Click event for Shuffle button Enables shuffle flag to true
 		 * */
-		btnShuffle.setOnClickListener(new View.OnClickListener() {
-
+		btnShuffle.setOnClickListener(new OnClickListener() {
+			
 			@Override
-			public void onClick(View arg0) {
-				//postToWall();
-				shareContent();
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				shareOnWall();
 			}
-//				if (isShuffle) {
-//					isShuffle = false;
-//					Toast.makeText(getApplicationContext(), "Shuffle is OFF",
-//							Toast.LENGTH_SHORT).show();
-//					btnShuffle.setImageResource(R.drawable.btn_shuffle);
-//				} else {
-//					// make repeat to true
-//					isShuffle = true;
-//					Toast.makeText(getApplicationContext(), "Shuffle is ON",
-//							Toast.LENGTH_SHORT).show();
-//					// make shuffle to false
-//					isRepeat = false;
-//					btnShuffle.setImageResource(R.drawable.btn_shuffle_focused);
-//					btnRepeat.setImageResource(R.drawable.btn_repeat);
-//				}
-//				Toast.makeText(_activity, "Option is Disabled for now!",
-//						Toast.LENGTH_SHORT).show();
-//			}
 		});
 		
 		btnPlaylist.setOnClickListener(new OnClickListener() {
@@ -389,9 +371,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				//shareOnFB();
-				publishContents();
-				//new FaccebookLogin();
+				loginOnFB();
 			}
 		});
 
@@ -915,7 +895,10 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		return false;
 	}
 	
-	public void postToWall(){
+	public void shareOnWall(){
+		
+		Log.i("FB", "Pahuch gaya");
+		
 		facebook.dialog(this, "feed", new DialogListener() {
 			 
 	        @Override
@@ -936,139 +919,126 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	    });
 	}
 	
-//	public void shareOnFB(){
-//		mPrefs = getPreferences(MODE_PRIVATE);
-//	    String access_token = mPrefs.getString("access_token", null);
-//	    long expires = mPrefs.getLong("access_expires", 0);
-//	    if(access_token != null){
-//	    	facebook.setAccessToken(access_token);
-//	    }
-//	    if (expires != 0) {
-//	        facebook.setAccessExpires(expires);
-//	    }
-//	    
-//	    if(!facebook.isSessionValid()){
-//	    	facebook.authorize(SyncMainActivity.this, new String[] { "email", "publish_stream" }, new DialogListener() {
-//				
-//				public void onFacebookError(FacebookError e) {
-//					// TODO Auto-generated method stub
-//					
-//				}
-//				
-//				public void onError(DialogError e) {
-//					// TODO Auto-generated method stub
-//					
-//				}
-//				
-//				public void onComplete(Bundle values) {
-//					// TODO Auto-generated method stub
-//					SharedPreferences.Editor  editor = mPrefs.edit();
-//					editor.putString("access_token",
-//                            facebook.getAccessToken());
-//                    editor.putLong("access_expires",
-//                            facebook.getAccessExpires());
-//                    editor.commit();
-//                    
-//                   // postToWall();
-//                    
-//				}
-//				
-//				public void onCancel() {
-//					// TODO Auto-generated method stub
-//					
-//				}
-//			});
-//	    }
-//	    
-//	}
-	
-	public void publishContents(){
-		try {
-			PackageInfo info = getPackageManager().getPackageInfo("com.facebook.scrumptious", PackageManager.GET_SIGNATURES);
-			for (Signature signature : info.signatures) {
-	            MessageDigest md = MessageDigest.getInstance("SHA");
-	            md.update(signature.toByteArray());
-	            Log.d("Digest:", Base64.encodeToString(md.digest(), 0));
-	            }
-		} catch (NameNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-				
-		Session s = new Session.Builder(this).setApplicationId(APP_ID).build();
-		Log.d("KeyHash:", ""+APP_ID);
-		Session.setActiveSession(s);
-		Session.OpenRequest request = new Session.OpenRequest(this);
-		request.setPermissions(Arrays.asList("basic_info","email"));
-		request.setCallback( new Session.StatusCallback() {
-		   // callback when session changes state
-		             @Override
-		             public void call(Session session, SessionState state, Exception exception) {
-		                 if (session.isOpened()) {
-		                     Request.newMeRequest(session, new Request.GraphUserCallback() {
-		                         @Override
-		                         public void onCompleted(GraphUser user, Response response) {
-		                             if (user != null) {
-
-		Toast.makeText(getApplicationContext(), "User email is:"+user.getProperty("email"), Toast.LENGTH_SHORT).show(); } 
-		else {
-		Toast.makeText(getApplicationContext(), "Error User Null", Toast.LENGTH_SHORT).show();
-		}
-		}
-		}).executeAsync();
-		} 
-		             }
-		         }); //end of call;
-
-		s.openForRead(request);
+	public void loginOnFB(){
+		mPrefs = getPreferences(MODE_PRIVATE);
+	    String access_token = mPrefs.getString("access_token", null);
+	    long expires = mPrefs.getLong("access_expires", 0);
+	 
+	    if (access_token != null) {
+	        facebook.setAccessToken(access_token);
+	    }
+	 
+	    if (expires != 0) {
+	        facebook.setAccessExpires(expires);
+	    }
+	 
+	    if (!facebook.isSessionValid()) {
+	        facebook.authorize(this,
+	                new String[] { "email", "publish_stream" },
+	                new DialogListener() {
+	 
+	                    @Override
+	                    public void onCancel() {
+	                        // Function to handle cancel event
+	                    }
+	 
+	                    @Override
+	                    public void onComplete(Bundle values) {
+	                        // Function to handle complete event
+	                        // Edit Preferences and update facebook acess_token
+	                        SharedPreferences.Editor editor = mPrefs.edit();
+	                        editor.putString("access_token",
+	                                facebook.getAccessToken());
+	                        editor.putLong("access_expires",
+	                                facebook.getAccessExpires());
+	                        editor.commit();
+	                    }
+	 
+	                    @Override
+	                    public void onError(DialogError error) {
+	                        // Function to handle error
+	 
+	                    }
+	 
+	                    @Override
+	                    public void onFacebookError(FacebookError fberror) {
+	                        // Function to handle Facebook errors
+	 
+	                    }
+	 
+	                });
+	    }
+	    
 	}
 	
-	 @Override
-	  public void onActivityResult(int requestCode, int resultCode, Intent data) {
-	      super.onActivityResult(requestCode, resultCode, data);
-	      Session.getActiveSession().onActivityResult(this, requestCode, resultCode, data);
-	  }
+	public void publishContents(){
+	
+//		Session s = new Session.Builder(this).setApplicationId(APP_ID).build();
+//		Log.d("KeyHash:", ""+APP_ID);
+//		Session.setActiveSession(s);
+//		Session.OpenRequest request = new Session.OpenRequest(this);
+//		request.setPermissions(Arrays.asList("basic_info","email"));
+//		request.setCallback( new Session.StatusCallback() {
+//		   // callback when session changes state
+//		             @Override
+//		             public void call(Session session, SessionState state, Exception exception) {
+//		                 if (session.isOpened()) {
+//		                     Request.newMeRequest(session, new Request.GraphUserCallback() {
+//		                         @Override
+//		                         public void onCompleted(GraphUser user, Response response) {
+//		                             if (user != null) {
+//
+//		Toast.makeText(getApplicationContext(), "User email is:"+user.getProperty("email"), Toast.LENGTH_SHORT).show(); } 
+//		else {
+//		Toast.makeText(getApplicationContext(), "Error User Null", Toast.LENGTH_SHORT).show();
+//		}
+//		}
+//		}).executeAsync();
+//		} 
+//		             }
+//		         }); //end of call;
+//
+//		s.openForRead(request);
+	}
+	
+	
 	 
-	 public void shareContent(){
-		// Set the dialog parameters
-		    Bundle params = new Bundle();
-		    params.putString("name", "SyncMusicPlayer");
-		    params.putString("caption", "Publish test");
-		    params.putString("description", "Applink test");
-		    params.putString("link", "No link ava");
-		    params.putString("picture", "Coming soon");
-
-		    // Invoke the dialog
-		    WebDialog feedDialog = (
-		        new WebDialog.FeedDialogBuilder(getApplicationContext(),
-		            Session.getActiveSession(),
-		            params))
-		        .setOnCompleteListener(new OnCompleteListener() {
-		            @Override
-		            public void onComplete(Bundle values,
-		                FacebookException error) {
-		                if (error == null) {
-		                    // When the story is posted, echo the success
-		                    // and the post Id.
-		                    final String postId = values.getString("post_id");
-		                    if (postId != null) {
-		                    	Log.i("Story published", "IDpost"+ postId);
-		                        Toast.makeText(getApplicationContext(),
-		                            "Story published: "+postId,
-		                        Toast.LENGTH_SHORT).show();
-		                    }
-		                }
-		            }
-
-
-		        })
-		        .build();
-		    feedDialog.show();
-	 }
+//	 public void shareContent(){
+//		// Set the dialog parameters
+//		    Bundle params = new Bundle();
+//		    params.putString("name", "SyncMusicPlayer");
+//		    params.putString("caption", "Publish test");
+//		    params.putString("description", "Applink test");
+//		    params.putString("link", "No link ava");
+//		    params.putString("picture", "Coming soon");
+//
+//		    // Invoke the dialog
+//		    WebDialog feedDialog = (
+//		        new WebDialog.FeedDialogBuilder(getApplicationContext(),
+//		            Session.getActiveSession(),
+//		            params))
+//		        .setOnCompleteListener(new OnCompleteListener() {
+//		            @Override
+//		            public void onComplete(Bundle values,
+//		                FacebookException error) {
+//		                if (error == null) {
+//		                    // When the story is posted, echo the success
+//		                    // and the post Id.
+//		                    final String postId = values.getString("post_id");
+//		                    if (postId != null) {
+//		                    	Log.i("Story published", "IDpost"+ postId);
+//		                        Toast.makeText(getApplicationContext(),
+//		                            "Story published: "+postId,
+//		                        Toast.LENGTH_SHORT).show();
+//		                    }
+//		                }
+//		            }
+//
+//
+//		        })
+//		        .build();
+//		    feedDialog.show();
+//	 }
 	
 	
 }

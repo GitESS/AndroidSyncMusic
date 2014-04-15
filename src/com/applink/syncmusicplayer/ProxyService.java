@@ -24,7 +24,6 @@ import com.ford.syncV4.proxy.SyncProxyALM;
 import com.ford.syncV4.proxy.interfaces.IProxyListenerALM;
 import com.ford.syncV4.proxy.rpc.AddCommandResponse;
 import com.ford.syncV4.proxy.rpc.AddSubMenuResponse;
-import com.ford.syncV4.proxy.rpc.AlertManeuverResponse;
 import com.ford.syncV4.proxy.rpc.AlertResponse;
 import com.ford.syncV4.proxy.rpc.ChangeRegistrationResponse;
 import com.ford.syncV4.proxy.rpc.Choice;
@@ -47,7 +46,6 @@ import com.ford.syncV4.proxy.rpc.OnDriverDistraction;
 import com.ford.syncV4.proxy.rpc.OnHMIStatus;
 import com.ford.syncV4.proxy.rpc.OnLanguageChange;
 import com.ford.syncV4.proxy.rpc.OnPermissionsChange;
-import com.ford.syncV4.proxy.rpc.OnTBTClientState;
 import com.ford.syncV4.proxy.rpc.OnVehicleData;
 import com.ford.syncV4.proxy.rpc.PerformAudioPassThruResponse;
 import com.ford.syncV4.proxy.rpc.PerformInteractionResponse;
@@ -61,7 +59,6 @@ import com.ford.syncV4.proxy.rpc.SetAppIconResponse;
 import com.ford.syncV4.proxy.rpc.SetDisplayLayoutResponse;
 import com.ford.syncV4.proxy.rpc.SetGlobalPropertiesResponse;
 import com.ford.syncV4.proxy.rpc.SetMediaClockTimerResponse;
-import com.ford.syncV4.proxy.rpc.ShowConstantTBTResponse;
 import com.ford.syncV4.proxy.rpc.ShowResponse;
 import com.ford.syncV4.proxy.rpc.SliderResponse;
 import com.ford.syncV4.proxy.rpc.SpeakResponse;
@@ -70,7 +67,6 @@ import com.ford.syncV4.proxy.rpc.SubscribeVehicleDataResponse;
 import com.ford.syncV4.proxy.rpc.TTSChunk;
 import com.ford.syncV4.proxy.rpc.UnsubscribeButtonResponse;
 import com.ford.syncV4.proxy.rpc.UnsubscribeVehicleDataResponse;
-import com.ford.syncV4.proxy.rpc.UpdateTurnListResponse;
 import com.ford.syncV4.proxy.rpc.VehicleDataResult;
 import com.ford.syncV4.proxy.rpc.enums.AppInterfaceUnregisteredReason;
 import com.ford.syncV4.proxy.rpc.enums.ButtonEventMode;
@@ -286,8 +282,8 @@ public class ProxyService extends Service implements IProxyListenerALM {
 							"Seek Forward" })), nextCorrID());
 			_syncProxy.addCommand(/*1008*/nextCMDCorrID(), "Select Song", new Vector<String>(Arrays.asList(new String[] { "Select Song" })), nextCorrID());
 			_syncProxy.addCommand(/*1009*/nextCMDCorrID(), "Info",	new Vector<String>(Arrays.asList(new String[] { "Info" })),	nextCorrID());
-			_syncProxy.addCommand(nextCMDCorrID(), "Facebook", new Vector<String>(Arrays.asList(new String[] { "BOOK", "pheshbook", "fekbook", "fakebook" })), nextCorrID());
-			_syncProxy.addCommand(nextCMDCorrID(), "Post", new Vector<String>(Arrays.asList(new String[] { "Post" })), nextCorrID());
+			_syncProxy.addCommand(nextCMDCorrID(), "Login", new Vector<String>(Arrays.asList(new String[] { "Login" })), nextCorrID());
+			_syncProxy.addCommand(nextCMDCorrID(), "Share", new Vector<String>(Arrays.asList(new String[] { "Share","Wal", "POST", "Post. On. Wal" })), nextCorrID());
 		} catch (SyncException e) {
 			//Log.e(TAG, "Error adding AddCommands", e);
 		}
@@ -364,6 +360,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 
 			if (_syncProxy.getAppInterfaceRegistered()) {
 			  //if(_syncProxy.getIsConnected()){
+				
 				if (notification.getFirstRun()) {
 						
 					try {
@@ -755,6 +752,8 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		case 1004:
 			//Log.i("notification.getCmdID()", "" + notification.getCmdID());
 			_mainInstance.jumpToNextSong();
+			//_mainInstance.shareOnWall();
+
 			break;
 		case 1005:
 			//Log.i("notification.getCmdID()", "" + notification.getCmdID());
@@ -789,10 +788,18 @@ public class ProxyService extends Service implements IProxyListenerALM {
 							displayable, 1032);
 			break;
 		case 1010: 
-			SyncMainActivity.getInstance().publishContents();
+			_mainInstance.loginOnFB();
 			break;
 		case 1011:
-			SyncMainActivity.getInstance().postToWall();
+			_mainInstance.runOnUiThread(new Runnable() {
+				
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					_mainInstance.shareOnWall();
+				}
+			});
+			//_mainInstance.shareOnWall();
 			break;
 		default:
 			break;
@@ -872,7 +879,6 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		//	Log.i(TAG, "show lockscreen, DD_ON");
 			showLockScreen();
 		}
-
 	}
 
 	@Override
@@ -1207,25 +1213,25 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		return lockscreenUP;
 	}
 
-	public void onAlertManeuverResponse(AlertManeuverResponse arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public void onOnTBTClientState(OnTBTClientState arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public void onShowConstantTBTResponse(ShowConstantTBTResponse arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public void onUpdateTurnListResponse(UpdateTurnListResponse arg0) {
-		// TODO Auto-generated method stub
-
-	}
+//	public void onAlertManeuverResponse(AlertManeuverResponse arg0) {
+//		// TODO Auto-generated method stub
+//
+//	}
+//
+//	public void onOnTBTClientState(OnTBTClientState arg0) {
+//		// TODO Auto-generated method stub
+//
+//	}
+//
+//	public void onShowConstantTBTResponse(ShowConstantTBTResponse arg0) {
+//		// TODO Auto-generated method stub
+//
+//	}
+//
+//	public void onUpdateTurnListResponse(UpdateTurnListResponse arg0) {
+//		// TODO Auto-generated method stub
+//
+//	}
 	
 	
 
