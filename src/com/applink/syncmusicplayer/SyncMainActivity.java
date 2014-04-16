@@ -1,13 +1,10 @@
 package com.applink.syncmusicplayer;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
@@ -23,15 +20,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.Signature;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -39,7 +31,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -49,23 +40,25 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.facebook.FacebookException;
+import com.facebook.AppEventsLogger;
+import com.facebook.FacebookAuthorizationException;
+import com.facebook.FacebookOperationCanceledException;
 import com.facebook.Request;
 import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionState;
+import com.facebook.UiLifecycleHelper;
 import com.facebook.android.AsyncFacebookRunner;
 import com.facebook.android.DialogError;
 import com.facebook.android.Facebook;
-import com.facebook.android.FacebookError;
 import com.facebook.android.Facebook.DialogListener;
+import com.facebook.android.FacebookError;
+import com.facebook.model.GraphPlace;
 import com.facebook.model.GraphUser;
-import com.facebook.widget.WebDialog;
-import com.facebook.widget.WebDialog.OnCompleteListener;
+import com.facebook.widget.FacebookDialog;
+import com.facebook.widget.LoginButton;
 import com.ford.syncV4.exception.SyncException;
 import com.ford.syncV4.proxy.SyncProxyALM;
-import com.ford.syncV4.proxy.rpc.enums.ButtonName;
-import com.ford.syncV4.proxy.rpc.enums.Language;
 import com.ford.syncV4.proxy.rpc.enums.TextAlignment;
 import com.ford.syncV4.transport.TransportType;
 
@@ -104,13 +97,35 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	Button exit;
 	public static final String logTag = "SyncMusicPlayer";
 	private static SyncMainActivity _activity;
-	//Facebook integration
-	private static String APP_ID = "717599151625010"; //App ID
+	// Facebook integration
+	private static String APP_ID = "717599151625010"; // App ID
 	private Facebook facebook;
 	private AsyncFacebookRunner mSyncRunner;
 	private SharedPreferences mPrefs;
 	Session.StatusCallback mCallback;
-	
+	private LoginButton loginButton;
+	private GraphUser muser;
+	// Facebook mFacebook;
+	private UiLifecycleHelper uiHelper;
+	private Button share;
+
+	private static final List<String> PERMISSIONS = Arrays
+			.asList("publish_actions");
+
+	private final String PENDING_ACTION_BUNDLE_KEY = "com.example.samplefacebookproject:PendingAction";
+
+	public static final String test_Status = "This is a Test Status, Please dont waste your time reading this!!. Thank you";
+
+	private boolean canPresentShareDialog = false;
+	private PendingAction pendingAction = PendingAction.NONE;
+	private static final String PERMISSION = "publish_actions";
+
+	private GraphPlace place;
+	private List<GraphUser> tags;
+
+	private enum PendingAction {
+		NONE, POST_PHOTO, POST_STATUS_UPDATE
+	}
 
 	/**
 	 * In onCreate() specifies if it is the first time the activity is created
@@ -137,11 +152,9 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		setAllMusicPlayerButtons();
 
 		isFirstActivityRun = false;
-		
+
 		facebook = new Facebook(APP_ID);
 		mSyncRunner = new AsyncFacebookRunner(facebook);
-		
-		
 
 		Bundle b;
 		b = getIntent().getExtras();
@@ -358,20 +371,49 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		 * Button Click event for Shuffle button Enables shuffle flag to true
 		 * */
 		btnShuffle.setOnClickListener(new OnClickListener() {
-			
+
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				shareOnWall();
 			}
 		});
-		
+
 		btnPlaylist.setOnClickListener(new OnClickListener() {
-			
+
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				loginOnFB();
+			}
+		});
+
+		loginButton = (LoginButton) findViewById(R.id.login_button);
+		loginButton.setPublishPermissions(Arrays.asList("basic_info",
+				"publish_actions"));
+		loginButton
+				.setUserInfoChangedCallback(new LoginButton.UserInfoChangedCallback() {
+					@Override
+					public void onUserInfoFetched(GraphUser user) {
+
+						muser = user;
+						Log.i("hemant", "muser in button " + muser);
+						updateUI();
+						// It's possible that we were waiting for this.user to
+						// be populated in order to post a
+						// status update.
+						handlePendingAction();
+					}
+
+				});
+		
+		share = (Button) findViewById(R.id.Button01);
+		share.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				onClickPostStatusUpdate();
 			}
 		});
 
@@ -408,16 +450,17 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	public void seekBackwardCurrentPlayingSong() {
 		// get current song position
 		int currentPosition = syncPlayer.getCurrentPosition();
-		//Log.i("Backward-currentPos", "" + currentPosition);
+		// Log.i("Backward-currentPos", "" + currentPosition);
 		// check if seekBackward time is greater than 0 sec
 		if (currentPosition - seekBackwardTime >= 0) {
-			//Log.i("If-Backward ", "Control");
+			// Log.i("If-Backward ", "Control");
 			// Backward song
 
 			syncPlayer.seekTo(currentPosition - seekBackwardTime);
 			String songTitle = songsList.get(getCurrentPlayingSongIndex()).get(
 					"songTitle");
-			//Log.i("backward-currentPos", "" + currentPosition + "index "					+ getCurrentPlayingSongIndex() + " name" + songTitle);
+			// Log.i("backward-currentPos", "" + currentPosition + "index " +
+			// getCurrentPlayingSongIndex() + " name" + songTitle);
 
 			try {
 				ProxyService.getProxyInstance().show(
@@ -429,7 +472,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 				e.printStackTrace();
 			}
 		} else {
-			//Log.i("else-Backward ", "Control");
+			// Log.i("else-Backward ", "Control");
 			// backward to starting position
 			syncPlayer.seekTo(0);
 		}
@@ -441,13 +484,14 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		int currentPosition = syncPlayer.getCurrentPosition();
 		// check if seekForward time is lesser than song duration
 		if (currentPosition + seekForwardTime <= syncPlayer.getDuration()) {
-			//Log.i("If-Forward ", "Control");
+			// Log.i("If-Forward ", "Control");
 			// forward song
 
 			syncPlayer.seekTo(currentPosition + seekForwardTime);
 			String songTitle = songsList.get(getCurrentPlayingSongIndex()).get(
 					"songTitle");
-			//Log.i("Forwardward-currentPos", "" + currentPosition + "index "					+ getCurrentPlayingSongIndex() + " name" + songTitle);
+			// Log.i("Forwardward-currentPos", "" + currentPosition + "index " +
+			// getCurrentPlayingSongIndex() + " name" + songTitle);
 
 			try {
 				ProxyService.getProxyInstance().show(
@@ -460,7 +504,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			}
 		} else {
 			// forward to end position
-			//Log.i("Else-Forward ", "Control");
+			// Log.i("Else-Forward ", "Control");
 			syncPlayer.seekTo(syncPlayer.getDuration());
 		}
 	}
@@ -481,7 +525,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 
 			try {
 				// Added setDataSource() on 13/3/14 to play song
-				//Log.i("First Song", "" + (songsList.get(1).get("songPath")));
+				// Log.i("First Song", "" + (songsList.get(1).get("songPath")));
 				String songTitle = songsList.get(1).get("songTitle");
 				syncPlayer.setDataSource(songsList.get(1).get("songPath"));
 				try {
@@ -502,7 +546,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			}
 			syncPlayer.setLooping(true);
 		}
-		//Log.i("Music Player Start", "After perform Interaction");
+		// Log.i("Music Player Start", "After perform Interaction");
 		syncPlayer.start();
 	}
 
@@ -616,6 +660,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		uiHelper.onDestroy();
 		syncPlayer.release();
 		endSyncProxyInstance();
 		_activity = null;
@@ -634,7 +679,8 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		if (ProxyService.getProxyInstance() != null) {
 			try {
 				// / ProxyService.getProxyInstance().dispose();
-				//Log.i("Sync Main Servce", " is Running" + isMyServiceRunning());
+				// Log.i("Sync Main Servce", " is Running" +
+				// isMyServiceRunning());
 				if (isMyServiceRunning()) {
 					Intent i = new Intent(SyncMainActivity.this,
 							ProxyService.class);
@@ -682,8 +728,8 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 				if (proxyInstance.getCurrentTransportType() == TransportType.BLUETOOTH) {
 					// serviceInstance.reset();
 				} else {
-					//Log.e(logTag,
-					//		"endSyncProxyInstance. No reset required if transport is TCP");
+					// Log.e(logTag,
+					// "endSyncProxyInstance. No reset required if transport is TCP");
 				}
 				// if proxy == null create proxy
 			} else {
@@ -795,7 +841,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 										Const.Transport.PREFS_KEY_TRANSPORT_RECONNECT,
 										autoReconnect).commit();
 						if (!success) {
-							//Log.w(logTag, "Can't save properties");
+							// Log.w(logTag, "Can't save properties");
 						}
 
 						showPropertiesInTitle();
@@ -834,7 +880,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 						}
 					}
 				} else {
-					//Log.i("TAG", "A No Paired devices with the name sync");
+					// Log.i("TAG", "A No Paired devices with the name sync");
 				}
 
 				if (isSYNCpaired == true) {
@@ -853,10 +899,10 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 						if (proxyInstance != null) {
 							serviceInstance.reset();
 						} else {
-						//	Log.i("TAG", "proxy is null");
+							// Log.i("TAG", "proxy is null");
 							serviceInstance.startProxy();
 						}
-					//	Log.i("TAG", " proxyAlive == true success");
+						// Log.i("TAG", " proxyAlive == true success");
 					}
 				}
 			}
@@ -869,7 +915,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		LockScreenActivity.getInstance().finish();
 		syncPlayer.reset();
 		SyncMainActivity.getInstance().finish();
-	//	Log.i(logTag, "Disconnected");
+		// Log.i(logTag, "Disconnected");
 	}
 
 	public void lockAppsScreen() {
@@ -894,151 +940,303 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		}
 		return false;
 	}
+
+	 public void shareOnWall(){
 	
-	public void shareOnWall(){
-		
-		Log.i("FB", "Pahuch gaya");
-		
-		facebook.dialog(this, "feed", new DialogListener() {
-			 
-	        @Override
-	        public void onFacebookError(FacebookError e) {
-	        }
-	 
-	        @Override
-	        public void onError(DialogError e) {
-	        }
-	 
-	        @Override
-	        public void onComplete(Bundle values) {
-	        }
-	 
-	        @Override
-	        public void onCancel() {
-	        }
-	    });
+	 Log.i("FB", "Pahuch gaya");
+	
+	 facebook.dialog(this, "feed", new DialogListener() {
+	
+	 @Override
+	 public void onFacebookError(FacebookError e) {
+	 }
+	
+	 @Override
+	 public void onError(DialogError e) {
+	 }
+	
+	 @Override
+	 public void onComplete(Bundle values) {
+	 }
+	
+	 @Override
+	 public void onCancel() {
+	 }
+	 });
+	 }
+
+	 public void loginOnFB(){
+	 mPrefs = getPreferences(MODE_PRIVATE);
+	 String access_token = mPrefs.getString("access_token", null);
+	 long expires = mPrefs.getLong("access_expires", 0);
+	
+	 if (access_token != null) {
+	 facebook.setAccessToken(access_token);
+	 }
+	
+	 if (expires != 0) {
+	 facebook.setAccessExpires(expires);
+	 }
+	
+	 if (!facebook.isSessionValid()) {
+	 facebook.authorize(this,
+	 new String[] { "email", "publish_stream" },
+	 new DialogListener() {
+	
+	 @Override
+	 public void onCancel() {
+	 // Function to handle cancel event
+	 }
+	
+	 @Override
+	 public void onComplete(Bundle values) {
+	 // Function to handle complete event
+	 // Edit Preferences and update facebook acess_token
+	 SharedPreferences.Editor editor = mPrefs.edit();
+	 editor.putString("access_token",
+	 facebook.getAccessToken());
+	 editor.putLong("access_expires",
+	 facebook.getAccessExpires());
+	 editor.commit();
+	 }
+	
+	 @Override
+	 public void onError(DialogError error) {
+	 // Function to handle error
+	
+	 }
+	
+	 @Override
+	 public void onFacebookError(FacebookError fberror) {
+	 // Function to handle Facebook errors
+	
+	 }
+	
+	 });
+	 }
+	
+	 }
+
+	/**
+	 * 
+	 * This function performs Posting status without opening share dialog.
+	 **/
+	public void onClickPostStatusUpdate() {
+		Log.d("hemant", "OnClick post Status"
+				+ PendingAction.POST_STATUS_UPDATE + " boolean value"
+				+ canPresentShareDialog);
+		performPublish(PendingAction.POST_STATUS_UPDATE, canPresentShareDialog);
 	}
-	
-	public void loginOnFB(){
-		mPrefs = getPreferences(MODE_PRIVATE);
-	    String access_token = mPrefs.getString("access_token", null);
-	    long expires = mPrefs.getLong("access_expires", 0);
-	 
-	    if (access_token != null) {
-	        facebook.setAccessToken(access_token);
-	    }
-	 
-	    if (expires != 0) {
-	        facebook.setAccessExpires(expires);
-	    }
-	 
-	    if (!facebook.isSessionValid()) {
-	        facebook.authorize(this,
-	                new String[] { "email", "publish_stream" },
-	                new DialogListener() {
-	 
-	                    @Override
-	                    public void onCancel() {
-	                        // Function to handle cancel event
-	                    }
-	 
-	                    @Override
-	                    public void onComplete(Bundle values) {
-	                        // Function to handle complete event
-	                        // Edit Preferences and update facebook acess_token
-	                        SharedPreferences.Editor editor = mPrefs.edit();
-	                        editor.putString("access_token",
-	                                facebook.getAccessToken());
-	                        editor.putLong("access_expires",
-	                                facebook.getAccessExpires());
-	                        editor.commit();
-	                    }
-	 
-	                    @Override
-	                    public void onError(DialogError error) {
-	                        // Function to handle error
-	 
-	                    }
-	 
-	                    @Override
-	                    public void onFacebookError(FacebookError fberror) {
-	                        // Function to handle Facebook errors
-	 
-	                    }
-	 
-	                });
-	    }
-	    
+
+	/**
+	 * This Method performPublish Checks for the permission and if not available
+	 * then asks for the same
+	 * 
+	 **/
+	private void performPublish(PendingAction action, boolean allowNoSession) {
+		Session session = Session.getActiveSession();
+		Log.d("hemant", "Session" + session);
+
+		if (session != null) {
+			pendingAction = action;
+			Log.d("hemant", "Action in perform publish" + action
+					+ " and has permission ?" + hasPublishPermission());
+			if (hasPublishPermission()) {
+				// We can do the action right away.
+				handlePendingAction();
+				return;
+			} else if (session.isOpened()) {
+				// We need to get new permissions, then complete the action when
+				// we get called back.
+				session.requestNewPublishPermissions(new Session.NewPermissionsRequest(
+						this, PERMISSION));
+				return;
+			}
+		}
+		Log.d("hemant", "If allow No session?" + allowNoSession);
+		if (allowNoSession) {
+			Log.d("hemant", "allow is true them action" + action);
+			pendingAction = action;
+			handlePendingAction();
+		}
+
 	}
-	
-	public void publishContents(){
-	
-//		Session s = new Session.Builder(this).setApplicationId(APP_ID).build();
-//		Log.d("KeyHash:", ""+APP_ID);
-//		Session.setActiveSession(s);
-//		Session.OpenRequest request = new Session.OpenRequest(this);
-//		request.setPermissions(Arrays.asList("basic_info","email"));
-//		request.setCallback( new Session.StatusCallback() {
-//		   // callback when session changes state
-//		             @Override
-//		             public void call(Session session, SessionState state, Exception exception) {
-//		                 if (session.isOpened()) {
-//		                     Request.newMeRequest(session, new Request.GraphUserCallback() {
-//		                         @Override
-//		                         public void onCompleted(GraphUser user, Response response) {
-//		                             if (user != null) {
-//
-//		Toast.makeText(getApplicationContext(), "User email is:"+user.getProperty("email"), Toast.LENGTH_SHORT).show(); } 
-//		else {
-//		Toast.makeText(getApplicationContext(), "Error User Null", Toast.LENGTH_SHORT).show();
-//		}
-//		}
-//		}).executeAsync();
-//		} 
-//		             }
-//		         }); //end of call;
-//
-//		s.openForRead(request);
+
+	/**
+	 * Handles Action for the sake of posting :D *
+	 * 
+	 * */
+
+	@SuppressWarnings("incomplete-switch")
+	private void handlePendingAction() {
+		PendingAction previouslyPendingAction = pendingAction;
+		// These actions may re-set pendingAction if they are still pending, but
+		// we assume they
+		// will succeed.
+		Log.d("hemant", "previously pending action" + pendingAction);
+
+		pendingAction = PendingAction.NONE;
+
+		switch (previouslyPendingAction) {
+		case POST_PHOTO:
+			// postPhoto();
+			Log.d("hemant", "post photo");
+
+			break;
+		case POST_STATUS_UPDATE:
+			postStatusUpdate();
+			Log.d("hemant", "post status update");
+
+			break;
+		}
 	}
-	
-	
-	 
-//	 public void shareContent(){
-//		// Set the dialog parameters
-//		    Bundle params = new Bundle();
-//		    params.putString("name", "SyncMusicPlayer");
-//		    params.putString("caption", "Publish test");
-//		    params.putString("description", "Applink test");
-//		    params.putString("link", "No link ava");
-//		    params.putString("picture", "Coming soon");
-//
-//		    // Invoke the dialog
-//		    WebDialog feedDialog = (
-//		        new WebDialog.FeedDialogBuilder(getApplicationContext(),
-//		            Session.getActiveSession(),
-//		            params))
-//		        .setOnCompleteListener(new OnCompleteListener() {
-//		            @Override
-//		            public void onComplete(Bundle values,
-//		                FacebookException error) {
-//		                if (error == null) {
-//		                    // When the story is posted, echo the success
-//		                    // and the post Id.
-//		                    final String postId = values.getString("post_id");
-//		                    if (postId != null) {
-//		                    	Log.i("Story published", "IDpost"+ postId);
-//		                        Toast.makeText(getApplicationContext(),
-//		                            "Story published: "+postId,
-//		                        Toast.LENGTH_SHORT).show();
-//		                    }
-//		                }
-//		            }
-//
-//
-//		        })
-//		        .build();
-//		    feedDialog.show();
-//	 }
-	
-	
+
+	/**
+	 * Checks it has permission or not ,
+	 * */
+	private boolean hasPublishPermission() {
+		Session session = Session.getActiveSession();
+		return session != null
+				&& session.getPermissions().contains("publish_actions");
+	}
+
+	/*
+	 * Posts the status
+	 */
+	private void postStatusUpdate() {
+		Log.d("hemant", "Post Status Update ,can share "
+				+ canPresentShareDialog);
+		if (canPresentShareDialog) {
+			FacebookDialog shareDialog = createShareDialogBuilderForLink()
+					.build();
+			uiHelper.trackPendingDialogCall(shareDialog.present());
+			Log.d("hemant", "can share dialog:" + shareDialog);
+
+		} else if (muser != null && hasPublishPermission()) {
+			Log.d("hemant", "User is not null and has permission?  "
+					+ hasPublishPermission());
+			final String message = test_Status;
+			// getString(test_Status,
+			// muser.getFirstName(), (new Date().toString()));
+			Log.d("hemant", "Message" + message);
+			Request request = Request.newStatusUpdateRequest(
+					Session.getActiveSession(), message, place, tags,
+					new Request.Callback() {
+						@Override
+						public void onCompleted(Response response) {
+							// showPublishResult(message,
+							// response.getGraphObject(),
+							// response.getError());
+
+							Log.i("hemant", "publish Report : " + message + " "
+									+ response.getGraphObject() + " "
+									+ response.getError());
+						}
+					});
+			Log.d("hemant", "Request is" + request);
+
+			request.executeAsync();
+		} else {
+			pendingAction = PendingAction.POST_STATUS_UPDATE;
+		}
+	}
+
+	private FacebookDialog.ShareDialogBuilder createShareDialogBuilderForLink() {
+		return new FacebookDialog.ShareDialogBuilder(this)
+				.setName("Hello Facebook")
+				.setDescription(
+						"The 'Hello Facebook' sample application showcases simple Facebook integration")
+				.setLink("http://developers.facebook.com/android");
+	}
+
+	private void onSessionStateChange(Session session, SessionState state,
+			Exception exception) {
+		if (pendingAction != PendingAction.NONE
+				&& (exception instanceof FacebookOperationCanceledException || exception instanceof FacebookAuthorizationException)) {
+			new AlertDialog.Builder(SyncMainActivity.this).setTitle("Hemant")
+					.setMessage("Permission Granted")
+					.setPositiveButton("OK", null).show();
+			pendingAction = PendingAction.NONE;
+		} else if (state == SessionState.OPENED_TOKEN_UPDATED) {
+			handlePendingAction();
+		}
+		updateUI();
+	}
+
+	private FacebookDialog.Callback dialogCallback = new FacebookDialog.Callback() {
+		@Override
+		public void onError(FacebookDialog.PendingCall pendingCall,
+				Exception error, Bundle data) {
+			Log.d("HelloFacebook", String.format("Error: %s", error.toString()));
+		}
+
+		@Override
+		public void onComplete(FacebookDialog.PendingCall pendingCall,
+				Bundle data) {
+			Log.d("HelloFacebook", "Success!");
+		}
+	};
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		uiHelper.onResume();
+
+		// Call the 'activateApp' method to log an app event for use in
+		// analytics and advertising reporting. Do so in
+		// the onResume methods of the primary Activities that an app may be
+		// launched into.
+		AppEventsLogger.activateApp(this);
+
+		updateUI();
+	}
+
+	private void updateUI() {
+		Log.i("hemant", "Update UI");
+		Session session = Session.getActiveSession();
+		boolean enableButtons = (session != null && session.isOpened());
+
+		// postStatusUpdateButton.setEnabled(enableButtons
+		// || canPresentShareDialog);
+		// postPhotoButton.setEnabled(enableButtons
+		// || canPresentShareDialogWithPhotos);
+		// pickFriendsButton.setEnabled(enableButtons);
+		// pickPlaceButton.setEnabled(enableButtons);
+		//
+		// if (enableButtons && user != null) {
+		// profilePictureView.setProfileId(user.getId());
+		// greeting.setText(getString(R.string.hello_user,
+		// user.getFirstName()));
+		// } else {
+		// profilePictureView.setProfileId(null);
+		// greeting.setText(null);
+		// }
+		Log.d("hemant", "User is" + muser);
+		TextView welcome = (TextView) findViewById(R.id.welcome);
+		if (muser != null) {
+			welcome.setText("Hello " + muser.getName() + "!");
+
+		}
+	}
+
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		uiHelper.onSaveInstanceState(outState);
+
+		outState.putString(PENDING_ACTION_BUNDLE_KEY, pendingAction.name());
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		uiHelper.onActivityResult(requestCode, resultCode, data, dialogCallback);
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		uiHelper.onPause();
+	}
+
 }

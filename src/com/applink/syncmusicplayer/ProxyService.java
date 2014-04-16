@@ -791,6 +791,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			_mainInstance.loginOnFB();
 			break;
 		case 1011:
+			
 			_mainInstance.runOnUiThread(new Runnable() {
 				
 				@Override

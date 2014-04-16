@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent" 
-    android:background="#4a4a4a"> 
+    android:background="#4a4a4a" xmlns:app="http://schemas.android.com/apk/res-auto"> 
     
     <!-- Player Header -->
     <LinearLayout 
@@ -56,9 +56,21 @@
         android:paddingBottom="10dp"
         android:gravity="center"
         android:layout_below="@id/player_header_bg">
-    	<ImageView android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/adele"/>    
+
+        <com.facebook.widget.LoginButton
+            xmlns:facebook="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/login_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            app:confirm_logout="false"
+            facebook:fetch_user_info="true" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/adele" />
+    
     </LinearLayout>
     
     <!-- Player Footer -->
@@ -183,5 +195,14 @@
             android:src="@drawable/btn_shuffle"
             android:layout_marginLeft="5dp"
             android:background="@null"/>
+         
+         
+         <Button
+            android:id="@+id/Button01"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/share" />
+
     </LinearLayout>
+
 </RelativeLayout>
