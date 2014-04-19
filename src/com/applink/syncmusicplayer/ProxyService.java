@@ -11,6 +11,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -282,7 +284,7 @@ public class ProxyService extends Service implements IProxyListenerALM {
 							"Seek Forward" })), nextCorrID());
 			_syncProxy.addCommand(/*1008*/nextCMDCorrID(), "Select Song", new Vector<String>(Arrays.asList(new String[] { "Select Song" })), nextCorrID());
 			_syncProxy.addCommand(/*1009*/nextCMDCorrID(), "Info",	new Vector<String>(Arrays.asList(new String[] { "Info" })),	nextCorrID());
-			_syncProxy.addCommand(nextCMDCorrID(), "Login", new Vector<String>(Arrays.asList(new String[] { "Login" })), nextCorrID());
+			//_syncProxy.addCommand(nextCMDCorrID(), "Login", new Vector<String>(Arrays.asList(new String[] { "Login" })), nextCorrID());
 			_syncProxy.addCommand(nextCMDCorrID(), "Share", new Vector<String>(Arrays.asList(new String[] { "Share","Wal", "POST", "Post. On. Wal" })), nextCorrID());
 		} catch (SyncException e) {
 			//Log.e(TAG, "Error adding AddCommands", e);
@@ -538,154 +540,192 @@ public class ProxyService extends Service implements IProxyListenerALM {
 		// TODO Auto-generated method stub
 		Log.i(TAG, "" + notification.getButtonPressMode());
 		
-		ButtonPressEventClass.getInstance(this).ButtonsBehaviors(notification.getButtonName());
-		
-//		if (notification.getCustomButtonName() == null){
-//			
-//			if(notification.getButtonPressMode().equals(ButtonPressMode.SHORT)){
-//				
-//			audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-//			switch (notification.getButtonName()) {
-//			case OK:
-//				_mainInstance.playPauseCurrentPlayingSong();
-//				break;
-//			case SEEKLEFT:
-//				_mainInstance.seekBackwardCurrentPlayingSong();
-//				break;
-//			case SEEKRIGHT:
-//				_mainInstance.seekForwardCurrentPlayingSong();
-//				break;
-//			case TUNEUP:
-//				audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-//						AudioManager.ADJUST_RAISE, AudioManager.FLAG_VIBRATE);
-//				break;
-//			case TUNEDOWN:
-//				audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
-//						AudioManager.ADJUST_LOWER, AudioManager.FLAG_VIBRATE);
-//				break;
-//			case PRESET_0:
-//				// SubscribeVehicleDataClass.getInstance(ProxyService.this,
-//				// 0).getVehicleData();
-//				_mainInstance.playCurrentSong(0);
-//				break;
-//			case PRESET_1:
-//				// SubscribeVehicleDataClass.getInstance(ProxyService.this,
-//				// 1).getVehicleData();
-//				_mainInstance.playCurrentSong(1);
-//				break;
-//			case PRESET_2:
-//				// SubscribeVehicleDataClass.getInstance(ProxyService.this,
-//				// 2).getVehicleData();
-//				_mainInstance.playCurrentSong(2);
-//				break;
-//			case PRESET_3:
-//				_mainInstance.playCurrentSong(3);
-//				break;
-//			case PRESET_4:
-//				_mainInstance.playCurrentSong(4);
-//				break;
-//			case PRESET_5:
-//				_mainInstance.playCurrentSong(5);
-//				break;
-//			case PRESET_6:
-//				_mainInstance.playCurrentSong(6);
-//				break;
-//			case PRESET_7:
-//				_mainInstance.playCurrentSong(7);
-//				break;
-//			case PRESET_8:
-//				_mainInstance.playCurrentSong(8);
-//				break;
-//			case PRESET_9:
-//				_mainInstance.playCurrentSong(9);
-//				break;
-//
-//			default:
-//				break;
-//			}
-//			} else {
-//				String msg;
-//				switch (notification.getButtonName()) {
-//				case PRESET_1:
-//					msg = new String("Song_number 10");
-//					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
-//							msg);
-//					//_mainInstance.playCurrentSong(1* 10);
-//					
-//					break;
-//				case PRESET_2:
-//					msg = new String("Song_number 20");
-//					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
-//							msg);
-//					//_mainInstance.playCurrentSong(2*10);
-//					
-//					break;
-//				case PRESET_3:
-//					msg = new String("Song_number 30");
-//					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
-//							msg);
-//					//_mainInstance.playCurrentSong(3*10);
-//					
-//					break;
-//				case PRESET_4:
-//					msg = new String("Song_number 40");
-//					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
-//							msg);
-//					//_mainInstance.playCurrentSong(4*10);
-//					
-//					break;
-//				case PRESET_5:
-//					msg = new String("Song_number 50");
-//					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
-//							msg);
-//					//_mainInstance.playCurrentSong(5*10);
-//					
-//					break;
-//				case PRESET_6:
-//					msg = new String("Song_number 60");
-//					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
-//							msg);
-//					//_mainInstance.playCurrentSong(10*6);
-//					
-//					break;
-//				case PRESET_7:
-//					msg = new String("Song_number 70");
-//					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
-//							msg);
-//					//_mainInstance.playCurrentSong(10*7);
-//					
-//					break;
-//				case PRESET_8:
-//					msg = new String("Song_number 80");
-//					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
-//							msg);
-//					//_mainInstance.playCurrentSong(10*8);
-//					
-//					break;
-//				case PRESET_9:
-//					msg = new String("Song_number 90");
-//					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
-//							msg);
-//					//_mainInstance.playCurrentSong(10*9);
-//					
-//					break;
-//				case PRESET_0:
-//					msg = new String("Song_number 100");
-//					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
-//							msg);
-//					
-//					//_mainInstance.playCurrentSong(100);
-//					
-//					break;
-//
-//				default:
-//					break;
-//				}
-//				
-//			}
-//
-//		} else {
-		if (notification.getCustomButtonName() != null){
+//		ButtonPressEventClass.getInstance(this).ButtonsBehaviors(notification.getButtonName());
+
+		if (notification.getCustomButtonName() == null){
+			
+			if(notification.getButtonPressMode().equals(ButtonPressMode.SHORT)){
+				
+			audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+			switch (notification.getButtonName()) {
+			case OK:
+				_mainInstance.playPauseCurrentPlayingSong();
+				break;
+			case SEEKLEFT:
+				_mainInstance.seekBackwardCurrentPlayingSong();
+				break;
+			case SEEKRIGHT:
+				_mainInstance.seekForwardCurrentPlayingSong();
+				break;
+			case TUNEUP:
+				audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+						AudioManager.ADJUST_RAISE, AudioManager.FLAG_VIBRATE);
+				break;
+			case TUNEDOWN:
+				audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+						AudioManager.ADJUST_LOWER, AudioManager.FLAG_VIBRATE);
+				break;
+			case PRESET_0:
+				// SubscribeVehicleDataClass.getInstance(ProxyService.this,
+				// 0).getVehicleData();
+				_mainInstance.playCurrentSong(0);
+				break;
+		case PRESET_1:
+				// SubscribeVehicleDataClass.getInstance(ProxyService.this,
+				// 1).getVehicleData();
+				_mainInstance.playCurrentSong(1);
+				break;
+			case PRESET_2:
+				// SubscribeVehicleDataClass.getInstance(ProxyService.this,
+				// 2).getVehicleData();
+				_mainInstance.playCurrentSong(2);
+				break;
+			case PRESET_3:
+				_mainInstance.playCurrentSong(3);
+				break;
+			case PRESET_4:
+				_mainInstance.playCurrentSong(4);
+				break;
+			case PRESET_5:
+				_mainInstance.playCurrentSong(5);
+				break;
+			case PRESET_6:
+				_mainInstance.playCurrentSong(6);
+				break;
+			case PRESET_7:
+				_mainInstance.playCurrentSong(7);
+				break;
+			case PRESET_8:
+				_mainInstance.playCurrentSong(8);
+				break;
+			case PRESET_9:
+				_mainInstance.playCurrentSong(9);
+				break;
+
+			default:
+				break;
+			}
+			} else {
+				String msg;
+				switch (notification.getButtonName()) {
+				case PRESET_1:
+					/*msg = new String("Song_number 10");
+					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
+							msg);
+					//_mainInstance.playCurrentSong(1* 10);
+					*///playSongsFromSoundCloud();
+//					String mStreamURL = "https://soundcloud.com/dankar/love-to-see-you-cry-1?client_id=d36b45d222d35c20e988b707169139f9";
+//					SyncMainActivity.getInstance().syncPlayer = new MediaPlayer();
+//					SyncMainActivity.getInstance().syncPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//					try {
+////				        mMediaPlayer.setDataSource(mStreamURL);
+//						SyncMainActivity.getInstance().syncPlayer.setDataSource(mStreamURL);
+//						SyncMainActivity.getInstance().syncPlayer.prepare();
+//						SyncMainActivity.getInstance().syncPlayer.start();
+//				    } catch (Exception e) {
+//				        e.printStackTrace();
+//				    }
+					//String mStreamURL = "https://soundcloud.com/search/sounds?q=love%20to%20see%20you%20cry?client_id=d36b45d222d35c20e988b707169139f9";
+					String mStreamURL = "http://www.spywaredrguide.com/VirtualDr/files/Here_and_Now.mp3";
+					SyncMainActivity.getInstance().playCurrentSong4Cloud(mStreamURL);
+					break;
+				case PRESET_2:
+					msg = new String("Song_number 20");
+					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
+							msg);
+					//_mainInstance.playCurrentSong(2*10);
+					
+					break;
+				case PRESET_3:
+					msg = new String("Song_number 30");
+					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
+							msg);
+					//_mainInstance.playCurrentSong(3*10);
+					
+					break;
+				case PRESET_4:
+					msg = new String("Song_number 40");
+					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
+							msg);
+					//_mainInstance.playCurrentSong(4*10);
+					
+					break;
+				case PRESET_5:
+					msg = new String("Song_number 50");
+					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
+							msg);
+					//_mainInstance.playCurrentSong(5*10);
+					
+					break;
+				case PRESET_6:
+					msg = new String("Song_number 60");
+					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
+						msg);
+					//_mainInstance.playCurrentSong(10*6);
+					
+					break;
+				case PRESET_7:
+					msg = new String("Song_number 70");
+					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
+							msg);
+					//_mainInstance.playCurrentSong(10*7);
+				
+					break;
+				case PRESET_8:
+					msg = new String("Song_number 80");
+					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
+							msg);
+					//_mainInstance.playCurrentSong(10*8);
+					
+				break;
+				case PRESET_9:
+					msg = new String("Song_number 90");
+					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
+							msg);
+					//_mainInstance.playCurrentSong(10*9);
+					
+					break;
+				case PRESET_0:
+					msg = new String("Song_number 100");
+					AlertClass.getInstance(ProxyService.this).getAlert("Long Press", 3000,
+							msg);
+					
+					//_mainInstance.playCurrentSong(100);
+					break;
+					
+				case SEEKRIGHT:
+					
+					_mainInstance.runOnUiThread(new Runnable() {
+						
+						@Override
+						public void run() {
+							// TODO Auto-generated method stub
+							SyncMainActivity.getInstance().playLiveStream();
+						}
+					});
+					//LiveAudioStreaming.getInstance().play();
+					break;
+					
+				case SEEKLEFT:
+					
+					_mainInstance.runOnUiThread(new Runnable() {
+						
+						@Override
+						public void run() {
+							// TODO Auto-generated method stub
+							_mainInstance.pauseLiveStream();
+						}
+					});
+					
+					break;
+				default:
+					break;
+				}
+				
+			}
+
+		} else {
+		//if (notification.getCustomButtonName() != null){
 			// Handling softButtons notifications-- 6 softbuttons cmd are albumList,
 			// SongList, Song info, app info, applink info, command info
 
@@ -787,17 +827,17 @@ public class ProxyService extends Service implements IProxyListenerALM {
 					.performInteraction(initChunks, helpChunks, tymoutChunks,
 							displayable, 1032);
 			break;
-		case 1010: 
-			_mainInstance.loginOnFB();
-			break;
-		case 1011:
-			
+//		case 1010: 
+//			//_mainInstance.loginOnFB();
+//			break;
+		case 1010:
+			//_mainInstance.onClickPostStatusUpdate();
 			_mainInstance.runOnUiThread(new Runnable() {
 				
 				@Override
 				public void run() {
 					// TODO Auto-generated method stub
-					_mainInstance.shareOnWall();
+					_mainInstance.onClickPostStatusUpdate();
 				}
 			});
 			//_mainInstance.shareOnWall();
@@ -1234,6 +1274,18 @@ public class ProxyService extends Service implements IProxyListenerALM {
 //
 //	}
 	
-	
+//	public void playSongsFromSoundCloud(){
+//		SyncMainActivity.getInstance().syncPlayer = new MediaPlayer();
+//		SyncMainActivity.getInstance().syncPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//		try {
+////	        mMediaPlayer.setDataSource(mStreamURL);
+//			SyncMainActivity.getInstance().setDataSource(mPlayButton.getContext(), Uri.parse(mStreamURL));
+//			SyncMainActivity.getInstance().prepare();
+//			SyncMainActivity.getInstance().start();
+//	    } catch (Exception e) {
+//	        e.printStackTrace();
+//	    }
+//		
+//	}
 
 }

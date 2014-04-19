@@ -20,8 +20,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnBufferingUpdateListener;
 import android.media.MediaPlayer.OnCompletionListener;
+import android.media.MediaPlayer.OnErrorListener;
+import android.media.MediaPlayer.OnPreparedListener;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -43,17 +48,12 @@ import android.widget.Toast;
 import com.facebook.AppEventsLogger;
 import com.facebook.FacebookAuthorizationException;
 import com.facebook.FacebookOperationCanceledException;
+import com.facebook.HttpMethod;
 import com.facebook.Request;
 import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
-import com.facebook.android.AsyncFacebookRunner;
-import com.facebook.android.DialogError;
-import com.facebook.android.Facebook;
-import com.facebook.android.Facebook.DialogListener;
-import com.facebook.android.FacebookError;
-import com.facebook.model.GraphPlace;
 import com.facebook.model.GraphUser;
 import com.facebook.widget.FacebookDialog;
 import com.facebook.widget.LoginButton;
@@ -63,7 +63,7 @@ import com.ford.syncV4.proxy.rpc.enums.TextAlignment;
 import com.ford.syncV4.transport.TransportType;
 
 public class SyncMainActivity extends Activity implements OnCompletionListener,
-		SeekBar.OnSeekBarChangeListener {
+		SeekBar.OnSeekBarChangeListener, OnPreparedListener, OnBufferingUpdateListener, OnErrorListener {
 	private ImageButton btnPlay;
 	private ImageButton btnForward;
 	private ImageButton btnBackward;
@@ -77,7 +77,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	private TextView songCurrentDurationLabel;
 	private TextView songTotalDurationLabel;
 	// Media Player
-	public MediaPlayer syncPlayer;
+	public MediaPlayer syncPlayer, mp;
 	// Handler to update UI timer, progress bar etc,.
 	private Handler mHandler = new Handler();;
 	private SongsManager _songManager;
@@ -97,41 +97,42 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	Button exit;
 	public static final String logTag = "SyncMusicPlayer";
 	private static SyncMainActivity _activity;
-	// Facebook integration
-	private static String APP_ID = "717599151625010"; // App ID
-	private Facebook facebook;
-	private AsyncFacebookRunner mSyncRunner;
-	private SharedPreferences mPrefs;
 	Session.StatusCallback mCallback;
 	private LoginButton loginButton;
 	private GraphUser muser;
 	// Facebook mFacebook;
 	private UiLifecycleHelper uiHelper;
-	private Button share;
-
 	private static final List<String> PERMISSIONS = Arrays
 			.asList("publish_actions");
 
 	private final String PENDING_ACTION_BUNDLE_KEY = "com.example.samplefacebookproject:PendingAction";
 
-	public static final String test_Status = "This is a Test Status, Please dont waste your time reading this!!. Thank you";
+	public String test_Status;// =
+								// "This is a Test Status, Please dont waste your time reading this!!. Thank you";
+
+	public String getTest_Status() {
+		return test_Status;
+	}
+
+	public void setTest_Status(String test_Status) {
+		this.test_Status = test_Status;
+	}
 
 	private boolean canPresentShareDialog = false;
 	private PendingAction pendingAction = PendingAction.NONE;
 	private static final String PERMISSION = "publish_actions";
 
-	private GraphPlace place;
-	private List<GraphUser> tags;
-
 	private enum PendingAction {
 		NONE, POST_PHOTO, POST_STATUS_UPDATE
 	}
 
-	/**
-	 * In onCreate() specifies if it is the first time the activity is created
-	 * during this app launch.
-	 */
-	private static boolean isFirstActivityRun = true;
+	private Session.StatusCallback callback = new Session.StatusCallback() {
+		@Override
+		public void call(Session session, SessionState state,
+				Exception exception) {
+			onSessionStateChange(session, state, exception);
+		}
+	};
 
 	public int getCurrentPlayingSongIndex() {
 		return currentPlayingSongIndex;
@@ -145,17 +146,13 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		uiHelper = new UiLifecycleHelper(this, callback);
+		uiHelper.onCreate(savedInstanceState);
 		startSyncProxy();
 		_activity = this;
 
 		// Set all player buttons
 		setAllMusicPlayerButtons();
-
-		isFirstActivityRun = false;
-
-		facebook = new Facebook(APP_ID);
-		mSyncRunner = new AsyncFacebookRunner(facebook);
-
 		Bundle b;
 		b = getIntent().getExtras();
 		try {
@@ -260,8 +257,10 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		songTitleLabel = (TextView) findViewById(R.id.songTitle);
 		songCurrentDurationLabel = (TextView) findViewById(R.id.songCurrentDurationLabel);
 		songTotalDurationLabel = (TextView) findViewById(R.id.songTotalDurationLabel);
-		exit = (Button) findViewById(R.id.button_exit);
 
+		exit = (Button) findViewById(R.id.button_exit);
+		loginButton = (LoginButton) findViewById(R.id.login_button);
+		
 		exit.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -347,23 +346,25 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 
 			@Override
 			public void onClick(View arg0) {
-				if (isRepeat) {
-					isRepeat = false;
-					Toast.makeText(getApplicationContext(), "Repeat is OFF",
-							Toast.LENGTH_SHORT).show();
-					btnRepeat.setImageResource(R.drawable.btn_repeat);
-				} else {
-					// make repeat to true
-					isRepeat = true;
-					Toast.makeText(getApplicationContext(), "Repeat is ON",
-							Toast.LENGTH_SHORT).show();
-					// make shuffle to false
-					isShuffle = false;
-					btnRepeat.setImageResource(R.drawable.btn_repeat_focused);
-					btnShuffle.setImageResource(R.drawable.btn_shuffle);
-				}
-				Toast.makeText(_activity, "Option is Disabled for now!",
-						Toast.LENGTH_SHORT).show();
+				
+				pauseLiveStream();
+//				if (isRepeat) {
+//					isRepeat = false;
+//					Toast.makeText(getApplicationContext(), "Repeat is OFF",
+//							Toast.LENGTH_SHORT).show();
+//					btnRepeat.setImageResource(R.drawable.btn_repeat);
+//				} else {
+//					// make repeat to true
+//					isRepeat = true;
+//					Toast.makeText(getApplicationContext(), "Repeat is ON",
+//							Toast.LENGTH_SHORT).show();
+//					// make shuffle to false
+//					isShuffle = false;
+//					btnRepeat.setImageResource(R.drawable.btn_repeat_focused);
+//					btnShuffle.setImageResource(R.drawable.btn_shuffle);
+//				}
+//				Toast.makeText(_activity, "Option is Disabled for now!",
+//						Toast.LENGTH_SHORT).show();
 			}
 		});
 
@@ -375,7 +376,9 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				shareOnWall();
+				// shareOnWall();
+				
+				playLiveStream();
 			}
 		});
 
@@ -384,13 +387,14 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				loginOnFB();
+				// loginOnFB();
+				stopLiveStream();
 			}
 		});
 
-		loginButton = (LoginButton) findViewById(R.id.login_button);
 		loginButton.setPublishPermissions(Arrays.asList("basic_info",
 				"publish_actions"));
+		
 		loginButton
 				.setUserInfoChangedCallback(new LoginButton.UserInfoChangedCallback() {
 					@Override
@@ -406,17 +410,8 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 					}
 
 				});
-		
-		share = (Button) findViewById(R.id.Button01);
-		share.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				onClickPostStatusUpdate();
-			}
-		});
 
+		
 	}
 
 	// Go to previous Song from current one
@@ -521,12 +516,18 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	}
 
 	public void playCurrentSong() {
+		if (mp != null && mp.isPlaying()) {
+			Log.i("SoundCloud", "" + "Stopping");
+			mp.stop();
+			mp.reset();
+			///syncPlayer = null;
+		}
+		
 		if (syncPlayer == null) {
 
 			try {
-				// Added setDataSource() on 13/3/14 to play song
-				// Log.i("First Song", "" + (songsList.get(1).get("songPath")));
 				String songTitle = songsList.get(1).get("songTitle");
+				this.setTest_Status(songTitle);
 				syncPlayer.setDataSource(songsList.get(1).get("songPath"));
 				try {
 					ProxyService.getProxyInstance().show("Track No- :" + 1,
@@ -549,6 +550,38 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		// Log.i("Music Player Start", "After perform Interaction");
 		syncPlayer.start();
 	}
+	
+	public void playCurrentSong4Cloud(String mStreamURL) {
+		if (syncPlayer != null && syncPlayer.isPlaying()) {
+			Log.i("SoundCloud", "" + "Stopping");
+			syncPlayer.stop();
+			syncPlayer.reset();
+			///syncPlayer = null;
+		}
+		Log.i("SoundCloud", "" + "Reset");
+		//if(syncPlayer == null){
+
+		//MediaPlayer sdrPlayer = new MediaPlayer();
+
+		  try {
+			  mp.setDataSource(this, Uri.parse(mStreamURL));
+			  mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+			  mp.prepare(); // don't use prepareAsync for mp3 playback
+			  
+			  ProxyService.getProxyInstance().show("Tracks", "4m Clouds", TextAlignment.CENTERED, ProxyService.getInstance().nextCorrID());
+		  } catch (IOException e) {
+		   // TODO Auto-generated catch block
+		   e.printStackTrace();
+		  } catch (SyncException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		  syncPlayer.start();
+		
+		Log.i("SoundCloud", "EOC");
+		//}
+	}
 
 	public void pauseCurrentSong() {
 		if (syncPlayer != null && syncPlayer.isPlaying()) {
@@ -560,6 +593,12 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		// Capturing the current song number
 		// setCurrentPlayingSongIndex(songIndex);
 		// Play song
+		if (mp != null && mp.isPlaying()) {
+			Log.i("Internet radio", "" + "Stopping");
+			mp.stop();
+			mp.reset();
+		}
+		
 		if (songsList.size() > -1) {
 			try {
 				syncPlayer.reset();
@@ -569,6 +608,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 				syncPlayer.start();
 				// Displaying Song title
 				String songTitle = songsList.get(songIndex).get("songTitle");
+				this.setTest_Status("Song Title : " + songTitle);
 				ProxyService.getProxyInstance().show("Track No- :" + songIndex,
 						songTitle, TextAlignment.LEFT_ALIGNED,
 						ProxyService.getInstance().nextCorrID());
@@ -636,6 +676,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	public void onCompletion(MediaPlayer arg0) {
 		// TODO Auto-generated method stub
 		// check for repeat is ON or OFF
+		
 		if (isRepeat) {
 			// repeat is on play same song again
 			playCurrentSong(currentSongIndex);
@@ -678,9 +719,6 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		currentDuration = 0;
 		if (ProxyService.getProxyInstance() != null) {
 			try {
-				// / ProxyService.getProxyInstance().dispose();
-				// Log.i("Sync Main Servce", " is Running" +
-				// isMyServiceRunning());
 				if (isMyServiceRunning()) {
 					Intent i = new Intent(SyncMainActivity.this,
 							ProxyService.class);
@@ -941,90 +979,12 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		return false;
 	}
 
-	 public void shareOnWall(){
-	
-	 Log.i("FB", "Pahuch gaya");
-	
-	 facebook.dialog(this, "feed", new DialogListener() {
-	
-	 @Override
-	 public void onFacebookError(FacebookError e) {
-	 }
-	
-	 @Override
-	 public void onError(DialogError e) {
-	 }
-	
-	 @Override
-	 public void onComplete(Bundle values) {
-	 }
-	
-	 @Override
-	 public void onCancel() {
-	 }
-	 });
-	 }
-
-	 public void loginOnFB(){
-	 mPrefs = getPreferences(MODE_PRIVATE);
-	 String access_token = mPrefs.getString("access_token", null);
-	 long expires = mPrefs.getLong("access_expires", 0);
-	
-	 if (access_token != null) {
-	 facebook.setAccessToken(access_token);
-	 }
-	
-	 if (expires != 0) {
-	 facebook.setAccessExpires(expires);
-	 }
-	
-	 if (!facebook.isSessionValid()) {
-	 facebook.authorize(this,
-	 new String[] { "email", "publish_stream" },
-	 new DialogListener() {
-	
-	 @Override
-	 public void onCancel() {
-	 // Function to handle cancel event
-	 }
-	
-	 @Override
-	 public void onComplete(Bundle values) {
-	 // Function to handle complete event
-	 // Edit Preferences and update facebook acess_token
-	 SharedPreferences.Editor editor = mPrefs.edit();
-	 editor.putString("access_token",
-	 facebook.getAccessToken());
-	 editor.putLong("access_expires",
-	 facebook.getAccessExpires());
-	 editor.commit();
-	 }
-	
-	 @Override
-	 public void onError(DialogError error) {
-	 // Function to handle error
-	
-	 }
-	
-	 @Override
-	 public void onFacebookError(FacebookError fberror) {
-	 // Function to handle Facebook errors
-	
-	 }
-	
-	 });
-	 }
-	
-	 }
 
 	/**
 	 * 
 	 * This function performs Posting status without opening share dialog.
 	 **/
 	public void onClickPostStatusUpdate() {
-		Log.d("hemant", "OnClick post Status"
-				+ PendingAction.POST_STATUS_UPDATE + " boolean value"
-				+ canPresentShareDialog);
 		performPublish(PendingAction.POST_STATUS_UPDATE, canPresentShareDialog);
 	}
 
@@ -1035,12 +995,9 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	 **/
 	private void performPublish(PendingAction action, boolean allowNoSession) {
 		Session session = Session.getActiveSession();
-		Log.d("hemant", "Session" + session);
 
 		if (session != null) {
 			pendingAction = action;
-			Log.d("hemant", "Action in perform publish" + action
-					+ " and has permission ?" + hasPublishPermission());
 			if (hasPublishPermission()) {
 				// We can do the action right away.
 				handlePendingAction();
@@ -1053,9 +1010,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 				return;
 			}
 		}
-		Log.d("hemant", "If allow No session?" + allowNoSession);
 		if (allowNoSession) {
-			Log.d("hemant", "allow is true them action" + action);
 			pendingAction = action;
 			handlePendingAction();
 		}
@@ -1073,8 +1028,6 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		// These actions may re-set pendingAction if they are still pending, but
 		// we assume they
 		// will succeed.
-		Log.d("hemant", "previously pending action" + pendingAction);
-
 		pendingAction = PendingAction.NONE;
 
 		switch (previouslyPendingAction) {
@@ -1104,38 +1057,30 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	 * Posts the status
 	 */
 	private void postStatusUpdate() {
-		Log.d("hemant", "Post Status Update ,can share "
-				+ canPresentShareDialog);
 		if (canPresentShareDialog) {
 			FacebookDialog shareDialog = createShareDialogBuilderForLink()
 					.build();
 			uiHelper.trackPendingDialogCall(shareDialog.present());
-			Log.d("hemant", "can share dialog:" + shareDialog);
-
 		} else if (muser != null && hasPublishPermission()) {
-			Log.d("hemant", "User is not null and has permission?  "
-					+ hasPublishPermission());
-			final String message = test_Status;
-			// getString(test_Status,
-			// muser.getFirstName(), (new Date().toString()));
-			Log.d("hemant", "Message" + message);
-			Request request = Request.newStatusUpdateRequest(
-					Session.getActiveSession(), message, place, tags,
+			final String message =this
+					.getTest_Status();
+			Bundle params = new Bundle();
+			params.putString("name", "Ford Sync Music Player");
+			params.putString("caption", "SYNC Owners: Stay current.");
+			params.putString("description", message);
+			params.putString("link", "http://www.ford.com/");
+			params.putString(
+					"picture",
+					"http://www.brandsoftheworld.com/sites/default/files/styles/logo-thumbnail/public/0008/5841/brand.gif");
+			new Request(Session.getActiveSession(),
+					"/me/feed", params, HttpMethod.POST,
 					new Request.Callback() {
-						@Override
 						public void onCompleted(Response response) {
-							// showPublishResult(message,
-							// response.getGraphObject(),
-							// response.getError());
-
-							Log.i("hemant", "publish Report : " + message + " "
-									+ response.getGraphObject() + " "
-									+ response.getError());
+							/* handle the result */
 						}
-					});
-			Log.d("hemant", "Request is" + request);
+					}).executeAsync();
 
-			request.executeAsync();
+			// request.executeAsync();
 		} else {
 			pendingAction = PendingAction.POST_STATUS_UPDATE;
 		}
@@ -1167,13 +1112,11 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		@Override
 		public void onError(FacebookDialog.PendingCall pendingCall,
 				Exception error, Bundle data) {
-			Log.d("HelloFacebook", String.format("Error: %s", error.toString()));
-		}
+			}
 
 		@Override
 		public void onComplete(FacebookDialog.PendingCall pendingCall,
 				Bundle data) {
-			Log.d("HelloFacebook", "Success!");
 		}
 	};
 
@@ -1192,29 +1135,12 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	}
 
 	private void updateUI() {
-		Log.i("hemant", "Update UI");
-		Session session = Session.getActiveSession();
-		boolean enableButtons = (session != null && session.isOpened());
-
-		// postStatusUpdateButton.setEnabled(enableButtons
-		// || canPresentShareDialog);
-		// postPhotoButton.setEnabled(enableButtons
-		// || canPresentShareDialogWithPhotos);
-		// pickFriendsButton.setEnabled(enableButtons);
-		// pickPlaceButton.setEnabled(enableButtons);
-		//
-		// if (enableButtons && user != null) {
-		// profilePictureView.setProfileId(user.getId());
-		// greeting.setText(getString(R.string.hello_user,
-		// user.getFirstName()));
-		// } else {
-		// profilePictureView.setProfileId(null);
-		// greeting.setText(null);
-		// }
-		Log.d("hemant", "User is" + muser);
-		TextView welcome = (TextView) findViewById(R.id.welcome);
+		Session.getActiveSession();
 		if (muser != null) {
-			welcome.setText("Hello " + muser.getName() + "!");
+			// welcome.setText("Hello " + muser.getName() + "!");
+			Toast.makeText(getApplicationContext(),
+					"Hello " + muser.getName() + "!", Toast.LENGTH_SHORT)
+					.show();
 
 		}
 	}
@@ -1239,4 +1165,83 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		uiHelper.onPause();
 	}
 
+	public void playLiveStream(){
+		if (syncPlayer != null && syncPlayer.isPlaying()) {
+			Log.i("SoundCloud", "" + "Stopping");
+			syncPlayer.stop();
+			syncPlayer.reset();
+			///syncPlayer = null;
+		}
+		
+		
+		Uri myUri = Uri.parse("http://fr3.ah.fm:9000/");
+		try {
+			if (mp == null) {
+				this.mp = new MediaPlayer();
+			} else {
+				mp.stop();
+				mp.reset();
+			}
+			mp.setDataSource(this, myUri); // Go to Initialized state
+			mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+			mp.setOnPreparedListener(this);
+			mp.setOnBufferingUpdateListener(this);
+
+			mp.setOnErrorListener(this);
+			mp.prepareAsync();
+			
+			ProxyService.getProxyInstance().show("Afterhours", "Internet Radio", TextAlignment.CENTERED, ProxyService.getInstance().nextCorrID());
+
+			Log.d("SyncMusicPlayer", "LoadClip Done");
+		} catch (Throwable t) {
+			Log.d("SyncMusicPlayer", t.toString());
+		}
+	}
+
+	@Override
+	public boolean onError(MediaPlayer mp, int what, int extra) {
+		// TODO Auto-generated method stub
+		StringBuilder sb = new StringBuilder();
+		sb.append("Media Player Error: ");
+		switch (what) {
+		case MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
+			sb.append("Not Valid for Progressive Playback");
+			break;
+		case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
+			sb.append("Server Died");
+			break;
+		case MediaPlayer.MEDIA_ERROR_UNKNOWN:
+			sb.append("Unknown");
+			break;
+		default:
+			sb.append(" Non standard (");
+			sb.append(what);
+			sb.append(")");
+		}
+		sb.append(" (" + what + ") ");
+		sb.append(extra);
+		Log.e("SyncMusicPlayer", sb.toString());
+		return true;
+	}
+
+	@Override
+	public void onBufferingUpdate(MediaPlayer mp, int percent) {
+		// TODO Auto-generated method stub
+		Log.d("SyncMusicPlayer", "PlayerService onBufferingUpdate : " + percent + "%");
+	}
+
+	@Override
+	public void onPrepared(MediaPlayer mp) {
+		// TODO Auto-generated method stub
+		Log.d("SyncMusicPlayer", "Stream is prepared");
+		mp.start();
+	}
+	
+	public void stopLiveStream(){
+		mp.stop();
+	}
+	
+	public void pauseLiveStream(){
+		mp.pause();
+	}
 }

@@ -55,24 +55,7 @@ public class LockScreenActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		instance = this;
 		setContentView(R.layout.lockscreen);
-		
-		facebook = new Facebook(APP_ID);
-		mSyncRunner = new AsyncFacebookRunner(facebook);
 
-//		try {
-//			PackageInfo info = getPackageManager().getPackageInfo("com.facebook.samples.hellofacebook", PackageManager.GET_SIGNATURES);
-//			for (Signature signature : info.signatures) {
-//	            MessageDigest md = MessageDigest.getInstance("SHA");
-//	            md.update(signature.toByteArray());
-//	            Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
-//	            }
-//		} catch (NameNotFoundException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}catch (NoSuchAlgorithmException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
 		
 		final Button resetSYNCButton = (Button) findViewById(R.id.lockreset);
 		resetSYNCButton.setOnClickListener(new View.OnClickListener() {
@@ -103,13 +86,18 @@ public class LockScreenActivity extends Activity {
 			}
 		});
 		
-		final Button shareContent = (Button) findViewById(R.id.share);
+	final Button shareContent = (Button) findViewById(R.id.share);
 		shareContent.setOnClickListener(new OnClickListener() {
 			
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				//publishContents();
-				shareOnFB();
+				LockScreenActivity.getInstance().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					SyncMainActivity.getInstance().onClickPostStatusUpdate();
+				}
+			});
 			}
 		});
 	}
@@ -161,100 +149,4 @@ public class LockScreenActivity extends Activity {
 	}
 
 
-	public void shareOnFB(){
-		mPrefs = getPreferences(MODE_PRIVATE);
-	    String access_token = mPrefs.getString("access_token", null);
-	    long expires = mPrefs.getLong("access_expires", 0);
-	    if(access_token != null){
-	    	facebook.setAccessToken(access_token);
-	    }
-	    if (expires != 0) {
-	        facebook.setAccessExpires(expires);
-	    }
-	    
-	    if(!facebook.isSessionValid()){
-	    	facebook.authorize(LockScreenActivity.this, new String[] { "email", "publish_stream" }, new DialogListener() {
-				
-				public void onFacebookError(FacebookError e) {
-					// TODO Auto-generated method stub
-					
-				}
-				
-				public void onError(DialogError e) {
-					// TODO Auto-generated method stub
-					
-				}
-				
-				public void onComplete(Bundle values) {
-					// TODO Auto-generated method stub
-					SharedPreferences.Editor  editor = mPrefs.edit();
-					editor.putString("access_token",
-                            facebook.getAccessToken());
-                    editor.putLong("access_expires",
-                            facebook.getAccessExpires());
-                    editor.commit();
-                    
-                    postToWall();
-                    
-				}
-				
-				public void onCancel() {
-					// TODO Auto-generated method stub
-					
-				}
-			});
-	    }
-	    
-	}
-	
-	public void postToWall(){
-		facebook.dialog(this, "feed", new DialogListener() {
-			 
-	        @Override
-	        public void onFacebookError(FacebookError e) {
-	        }
-	 
-	        @Override
-	        public void onError(DialogError e) {
-	        }
-	 
-	        @Override
-	        public void onComplete(Bundle values) {
-	        }
-	 
-	        @Override
-	        public void onCancel() {
-	        }
-	    });
-	}
-	
-//	public void publishContents(){
-//		Session.openActiveSession(LockScreenActivity.this, true, new Session.StatusCallback() {
-//			
-//			@SuppressWarnings("deprecation")
-//			@Override
-//			public void call(Session session, SessionState state, Exception exception) {
-//				// TODO Auto-generated method stub
-//				if(session.isOpened()){
-//					Request.executeMeRequestAsync(session, new Request.GraphUserCallback() {
-//						
-//						@Override
-//						public void onCompleted(GraphUser user, Response response) {
-//							// TODO Auto-generated method stub
-//							if(user !=null){
-//								TextView welcome = (TextView) findViewById(R.id.welcome);
-//				                welcome.setText("Hello " + user.getName() + "!");
-//							}
-//						}
-//					});
-//				}
-//			}
-//		});
-//	}
-//	
-//	 @Override
-//	  public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//	      super.onActivityResult(requestCode, resultCode, data);
-//	      Session.getActiveSession().onActivityResult(this, requestCode, resultCode, data);
-//	  }
 }
