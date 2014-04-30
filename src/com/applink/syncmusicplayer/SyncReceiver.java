@@ -40,10 +40,11 @@ public class SyncReceiver extends BroadcastReceiver {
 			}
 
 			// if SYNC is disconnected from phone or BT disabled, stop service
-			// (and thus the proxy)
-		} else if (intent.getAction().equals(
-				BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
-			if (bluetoothDevice.getName().contains("SYNC")) {
+			// (and thus the proxy) release other resources if app is using
+		} else if (intent.getAction().equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
+			//if (bluetoothDevice.getName().contains("SYNC")) {
+				//ProxyService.getInstance().startProxy();
+				
 				ProxyService serviceInstance = ProxyService.getInstance();
 				if (serviceInstance != null) {
 					Intent stopIntent = new Intent(context, ProxyService.class);
@@ -57,7 +58,7 @@ public class SyncReceiver extends BroadcastReceiver {
 				}catch(Exception e){
 					Log.i("SyncReceiver", e.toString());
 				}
-			}
+			//}
 
 			// Listen for STATE_CHANGED as double-check when BT turned off & not
 			// connected to BT
