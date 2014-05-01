@@ -509,9 +509,12 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			ProxyService.getInstance().playingAudio = false;
 			pauseCurrentSong();
 		} else {
+			try{
 			ProxyService.getInstance().playingAudio = true;
 			playCurrentSong();
-
+			}catch(Exception e){
+				
+			}
 		}
 	}
 
@@ -538,6 +541,14 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 					e.printStackTrace();
 				}
 				syncPlayer.prepare();
+				_activity.runOnUiThread(new Runnable() {
+					
+					@Override
+					public void run() {
+						// TODO Auto-generated method stub
+						btnPlay.setImageResource(R.drawable.btn_pause);
+					}
+				});
 			} catch (IllegalStateException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -612,8 +623,15 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 				ProxyService.getProxyInstance().show("Track No- :" + songIndex,
 						songTitle, TextAlignment.LEFT_ALIGNED,
 						ProxyService.getInstance().nextCorrID());
-				btnPlay.setImageResource(R.drawable.btn_pause);
-
+				
+				_activity.runOnUiThread(new Runnable() {
+					
+					@Override
+					public void run() {
+						// TODO Auto-generated method stub
+						btnPlay.setImageResource(R.drawable.btn_pause);
+					}
+				});
 				songProgressBar.setProgress(0);
 				songProgressBar.setMax(100);
 			} catch (IllegalArgumentException e) {
@@ -740,20 +758,6 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		return _activity;
 	}
 
-	/** Displays the current protocol properties in the activity's title. */
-	private void showPropertiesInTitle() {
-		final SharedPreferences prefs = getSharedPreferences(Const.PREFS_NAME,
-				0);
-		boolean isMedia = prefs.getBoolean(Const.PREFS_KEY_ISMEDIAAPP,
-				Const.PREFS_DEFAULT_ISMEDIAAPP);
-		String transportType = prefs.getInt(
-				Const.Transport.PREFS_KEY_TRANSPORT_TYPE,
-				Const.Transport.PREFS_DEFAULT_TRANSPORT_TYPE) == Const.Transport.KEY_TCP ? "WiFi"
-				: "BT";
-		setTitle(getResources().getString(R.string.app_name) + " ("
-				+ (isMedia ? "" : "non-") + "media, " + transportType + ")");
-	}
-
 	// upon onDestroy(), dispose current proxy and create a new one to enable
 	// auto-start
 	// call resetProxy() to do so
@@ -774,119 +778,6 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 				serviceInstance.startProxy();
 			}
 		}
-	}
-
-	/**
-	 * Shows a dialog where the user can select connection features (protocol
-	 * version, media flag, app name, language, HMI language, and transport
-	 * settings). Starts the proxy after selecting.
-	 */
-	private void propertiesUI() {
-		Context context = this;
-		LayoutInflater inflater = (LayoutInflater) context
-				.getSystemService(LAYOUT_INFLATER_SERVICE);
-		View view = inflater.inflate(R.layout.properties,
-				(ViewGroup) findViewById(R.id.properties_Root));
-
-		final CheckBox mediaCheckBox = (CheckBox) view
-				.findViewById(R.id.properties_checkMedia);
-		final EditText appNameEditText = (EditText) view
-				.findViewById(R.id.properties_appName);
-		final RadioGroup transportGroup = (RadioGroup) view
-				.findViewById(R.id.properties_radioGroupTransport);
-		final EditText ipAddressEditText = (EditText) view
-				.findViewById(R.id.properties_ipAddr);
-		final EditText tcpPortEditText = (EditText) view
-				.findViewById(R.id.properties_tcpPort);
-		final CheckBox autoReconnectCheckBox = (CheckBox) view
-				.findViewById(R.id.properties_checkAutoReconnect);
-
-		ipAddressEditText.setEnabled(false);
-		tcpPortEditText.setEnabled(false);
-		autoReconnectCheckBox.setEnabled(false);
-
-		transportGroup
-				.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-					@Override
-					public void onCheckedChanged(RadioGroup group, int checkedId) {
-						boolean transportOptionsEnabled = checkedId == R.id.properties_radioWiFi;
-						ipAddressEditText.setEnabled(transportOptionsEnabled);
-						tcpPortEditText.setEnabled(transportOptionsEnabled);
-						autoReconnectCheckBox
-								.setEnabled(transportOptionsEnabled);
-					}
-				});
-
-		// display current configs
-		final SharedPreferences prefs = getSharedPreferences(Const.PREFS_NAME,
-				0);
-		boolean isMedia = prefs.getBoolean(Const.PREFS_KEY_ISMEDIAAPP,
-				Const.PREFS_DEFAULT_ISMEDIAAPP);
-		String appName = prefs.getString(Const.PREFS_KEY_APPNAME,
-				Const.PREFS_DEFAULT_APPNAME);
-		int transportType = prefs.getInt(
-				Const.Transport.PREFS_KEY_TRANSPORT_TYPE,
-				Const.Transport.PREFS_DEFAULT_TRANSPORT_TYPE);
-		String ipAddress = prefs.getString(
-				Const.Transport.PREFS_KEY_TRANSPORT_IP,
-				Const.Transport.PREFS_DEFAULT_TRANSPORT_IP);
-		int tcpPort = prefs.getInt(Const.Transport.PREFS_KEY_TRANSPORT_PORT,
-				Const.Transport.PREFS_DEFAULT_TRANSPORT_PORT);
-		boolean autoReconnect = prefs.getBoolean(
-				Const.Transport.PREFS_KEY_TRANSPORT_RECONNECT,
-				Const.Transport.PREFS_DEFAULT_TRANSPORT_RECONNECT_DEFAULT);
-
-		mediaCheckBox.setChecked(isMedia);
-		appNameEditText.setText(appName);
-		transportGroup
-				.check(transportType == Const.Transport.KEY_TCP ? R.id.properties_radioWiFi
-						: R.id.properties_radioBT);
-		ipAddressEditText.setText(ipAddress);
-		tcpPortEditText.setText(String.valueOf(tcpPort));
-		autoReconnectCheckBox.setChecked(autoReconnect);
-
-		new AlertDialog.Builder(context).setTitle("Please select properties")
-				.setCancelable(false)
-				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-
-						String appName = appNameEditText.getText().toString();
-						boolean isMedia = mediaCheckBox.isChecked();
-						int transportType = transportGroup
-								.getCheckedRadioButtonId() == R.id.properties_radioWiFi ? Const.Transport.KEY_TCP
-								: Const.Transport.KEY_BLUETOOTH;
-						String ipAddress = ipAddressEditText.getText()
-								.toString();
-						int tcpPort = Integer.parseInt(tcpPortEditText
-								.getText().toString());
-						boolean autoReconnect = autoReconnectCheckBox
-								.isChecked();
-
-						// save the configs
-						boolean success = prefs
-								.edit()
-								.putBoolean(Const.PREFS_KEY_ISMEDIAAPP, isMedia)
-								.putString(Const.PREFS_KEY_APPNAME, appName)
-								.putInt(Const.Transport.PREFS_KEY_TRANSPORT_TYPE,
-										transportType)
-								.putString(
-										Const.Transport.PREFS_KEY_TRANSPORT_IP,
-										ipAddress)
-								.putInt(Const.Transport.PREFS_KEY_TRANSPORT_PORT,
-										tcpPort)
-								.putBoolean(
-										Const.Transport.PREFS_KEY_TRANSPORT_RECONNECT,
-										autoReconnect).commit();
-						if (!success) {
-							// Log.w(logTag, "Can't save properties");
-						}
-
-						showPropertiesInTitle();
-
-						startSyncProxy();
-					}
-				}).setView(view).show();
 	}
 
 	/** Starts the sync proxy at startup after selecting protocol features. */
@@ -1238,7 +1129,17 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	}
 	
 	public void stopLiveStream(){
-		mp.stop();
+		
+		if(mp != null && mp.isPlaying()){
+			try{
+			mp.stop();
+			mp.release();
+			}catch(Exception e){
+				
+			}
+		} else{
+		Toast.makeText(_activity, "No Streaming", Toast.LENGTH_SHORT).show();
+		}
 	}
 	
 	public void pauseLiveStream(){

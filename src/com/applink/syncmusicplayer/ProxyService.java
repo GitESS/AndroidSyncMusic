@@ -347,7 +347,14 @@ public class ProxyService extends Service implements IProxyListenerALM {
 			break;
 		case NOT_AUDIBLE:
 		//	Log.i("Not Audible", "First Run");
-			SyncMainActivity.getInstance().pauseCurrentSong();
+			if (SyncMainActivity.getInstance() != null) {
+				if (SyncMainActivity.getInstance().syncPlayer != null) {
+					//SyncMainActivity.getInstance().syncPlayer.release();
+					SyncMainActivity.getInstance().pauseCurrentSong();
+				}
+
+			}
+			
 			break;
 		default:
 			return;
