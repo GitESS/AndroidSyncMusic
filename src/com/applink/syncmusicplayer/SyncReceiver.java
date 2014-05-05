@@ -69,11 +69,6 @@ public class SyncReceiver extends BroadcastReceiver {
 					Intent stopIntent = new Intent(context, ProxyService.class);
 					stopIntent.putExtras(intent);
 					context.stopService(stopIntent);
-//					Log.i("Sync emant",
-//							"Sync main activity"
-//									+ SyncMainActivity.getInstance()
-//									+ "  sync player"
-//									+ SyncMainActivity.getInstance().syncPlayer);
 					if (SyncMainActivity.getInstance() != null) {
 						if (SyncMainActivity.getInstance().syncPlayer != null) {
 							SyncMainActivity.getInstance().syncPlayer.release();

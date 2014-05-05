@@ -27,19 +27,34 @@
             android:background="@android:drawable/ic_delete"
            />
 
-        <TextView 
+        <TextView
             android:id="@+id/songTitle"
-            android:layout_width="wrap_content"
+            android:layout_width="132dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_marginTop="10dp"
+            android:paddingLeft="10dp"
+            android:text="The Good, The Bad And The Ugly"
             android:textColor="#04b3d2"
             android:textSize="16dp"
-            android:paddingLeft="10dp"
-            android:textStyle="bold"
-            android:text="The Good, The Bad And The Ugly"
-            android:layout_marginTop="10dp"/>"
+            android:textStyle="bold" />
+"
         
         <!-- Playlist button -->
+
+        <ImageButton
+            android:id="@+id/img_stop_stream"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:src="@drawable/img_stream_stop" />
+
+        <ImageButton
+            android:id="@+id/img_audio_stream"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:src="@drawable/img_audio_stream" />
+
         <ImageButton 
             android:id="@+id/btnPlaylist"
             android:layout_width="wrap_content"

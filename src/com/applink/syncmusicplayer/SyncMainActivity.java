@@ -69,7 +69,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	private ImageButton btnBackward;
 	private ImageButton btnNext;
 	private ImageButton btnPrevious;
-	private ImageButton btnPlaylist;
+	private ImageButton btnPlaylist, btnAudioStream, btnStreamStop;
 	private ImageButton btnRepeat;
 	private ImageButton btnShuffle;
 	private SeekBar songProgressBar;
@@ -251,6 +251,8 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		btnNext = (ImageButton) findViewById(R.id.btnNext);
 		btnPrevious = (ImageButton) findViewById(R.id.btnPrevious);
 		btnPlaylist = (ImageButton) findViewById(R.id.btnPlaylist);
+		btnAudioStream = (ImageButton) findViewById(R.id.img_audio_stream);
+		btnStreamStop = (ImageButton) findViewById(R.id.img_stop_stream);
 		btnRepeat = (ImageButton) findViewById(R.id.btnRepeat);
 		btnShuffle = (ImageButton) findViewById(R.id.btnShuffle);
 		songProgressBar = (SeekBar) findViewById(R.id.songProgressBar);
@@ -378,6 +380,24 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 				// TODO Auto-generated method stub
 				// shareOnWall();
 				
+				
+			}
+		});
+		
+		btnStreamStop.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				stopLiveStream();
+			}
+		});
+		
+		btnAudioStream.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
 				playLiveStream();
 			}
 		});
@@ -388,7 +408,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				// loginOnFB();
-				stopLiveStream();
+				callPlayList();
 			}
 		});
 
@@ -401,7 +421,6 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 					public void onUserInfoFetched(GraphUser user) {
 
 						muser = user;
-						Log.i("hemant", "muser in button " + muser);
 						updateUI();
 						// It's possible that we were waiting for this.user to
 						// be populated in order to post a
@@ -571,8 +590,6 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		}
 		Log.i("SoundCloud", "" + "Reset");
 		//if(syncPlayer == null){
-
-		//MediaPlayer sdrPlayer = new MediaPlayer();
 
 		  try {
 			  mp.setDataSource(this, Uri.parse(mStreamURL));
@@ -924,13 +941,9 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		switch (previouslyPendingAction) {
 		case POST_PHOTO:
 			// postPhoto();
-			Log.d("hemant", "post photo");
-
 			break;
 		case POST_STATUS_UPDATE:
 			postStatusUpdate();
-			Log.d("hemant", "post status update");
-
 			break;
 		}
 	}
@@ -1048,6 +1061,11 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		uiHelper.onActivityResult(requestCode, resultCode, data, dialogCallback);
+		if(resultCode == 100){
+            currentSongIndex = data.getExtras().getInt("songIndex");
+            // play selected song
+            playCurrentSong(currentSongIndex);
+       }
 	}
 
 	@Override
@@ -1144,5 +1162,10 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	
 	public void pauseLiveStream(){
 		mp.pause();
+	}
+	
+	public void callPlayList(){
+		Intent i = new Intent(getApplicationContext(), PlayListActivity.class);
+        startActivityForResult(i, 100);
 	}
 }
