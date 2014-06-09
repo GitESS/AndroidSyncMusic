@@ -266,7 +266,7 @@ containing a value of this type.
     }
     public static final class id {
         public static final int TextView01=0x7f040038;
-        public static final int action_settings=0x7f040041;
+        public static final int action_settings=0x7f040044;
         public static final int btnBackward=0x7f04002c;
         public static final int btnForward=0x7f04002e;
         public static final int btnNext=0x7f04002f;
@@ -300,6 +300,7 @@ containing a value of this type.
         public static final int com_facebook_usersettingsfragment_logo_image=0x7f040016;
         public static final int com_facebook_usersettingsfragment_profile_name=0x7f040017;
         public static final int declineButton=0x7f04001a;
+        public static final int fragment_place=0x7f040041;
         public static final int img_audio_stream=0x7f040026;
         public static final int img_stop_stream=0x7f040025;
         public static final int large=0x7f040002;
@@ -307,8 +308,10 @@ containing a value of this type.
         public static final int login_button=0x7f040029;
         public static final int normal=0x7f040001;
         public static final int picker_subtitle=0x7f040013;
+        public static final int play_list_place=0x7f040043;
         public static final int player_footer_bg=0x7f04002a;
         public static final int player_header_bg=0x7f040022;
+        public static final int player_place=0x7f040042;
         public static final int properties_Root=0x7f040037;
         public static final int properties_appName=0x7f040039;
         public static final int properties_checkAutoReconnect=0x7f040040;
@@ -359,6 +362,7 @@ containing a value of this type.
         public static final int playlist_item=0x7f030017;
         public static final int properties=0x7f030018;
         public static final int rounded_corner=0x7f030019;
+        public static final int sync_main=0x7f03001a;
     }
     public static final class menu {
         public static final int sync_main=0x7f090000;

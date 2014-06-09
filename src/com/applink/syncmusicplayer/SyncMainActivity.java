@@ -62,16 +62,18 @@ import com.ford.syncV4.proxy.SyncProxyALM;
 import com.ford.syncV4.proxy.rpc.enums.TextAlignment;
 import com.ford.syncV4.transport.TransportType;
 
-public class SyncMainActivity extends Activity implements OnCompletionListener,
+public class SyncMainActivity extends Activity implements OnCompletionListener, 
 		SeekBar.OnSeekBarChangeListener, OnPreparedListener, OnBufferingUpdateListener, OnErrorListener {
 	private ImageButton btnPlay;
 	private ImageButton btnForward;
 	private ImageButton btnBackward;
 	private ImageButton btnNext;
 	private ImageButton btnPrevious;
-	private ImageButton btnPlaylist, btnAudioStream, btnStreamStop;
+	private ImageButton btnPlaylist;
 	private ImageButton btnRepeat;
 	private ImageButton btnShuffle;
+	private ImageButton liveStream;
+	private ImageButton stopStream;
 	private SeekBar songProgressBar;
 	private TextView songTitleLabel;
 	private TextView songCurrentDurationLabel;
@@ -251,10 +253,10 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		btnNext = (ImageButton) findViewById(R.id.btnNext);
 		btnPrevious = (ImageButton) findViewById(R.id.btnPrevious);
 		btnPlaylist = (ImageButton) findViewById(R.id.btnPlaylist);
-		btnAudioStream = (ImageButton) findViewById(R.id.img_audio_stream);
-		btnStreamStop = (ImageButton) findViewById(R.id.img_stop_stream);
 		btnRepeat = (ImageButton) findViewById(R.id.btnRepeat);
 		btnShuffle = (ImageButton) findViewById(R.id.btnShuffle);
+		liveStream = (ImageButton) findViewById(R.id.img_audio_stream);
+		stopStream = (ImageButton) findViewById(R.id.img_stop_stream);
 		songProgressBar = (SeekBar) findViewById(R.id.songProgressBar);
 		songTitleLabel = (TextView) findViewById(R.id.songTitle);
 		songCurrentDurationLabel = (TextView) findViewById(R.id.songCurrentDurationLabel);
@@ -262,7 +264,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 
 		exit = (Button) findViewById(R.id.button_exit);
 		loginButton = (LoginButton) findViewById(R.id.login_button);
-		
+
 		exit.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -348,8 +350,10 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 
 			@Override
 			public void onClick(View arg0) {
-				
-				pauseLiveStream();
+				Toast.makeText(_activity, "Option is Disabled for now!",
+						Toast.LENGTH_SHORT).show();
+
+				//pauseLiveStream();
 //				if (isRepeat) {
 //					isRepeat = false;
 //					Toast.makeText(getApplicationContext(), "Repeat is OFF",
@@ -379,26 +383,27 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				// shareOnWall();
-				
-				
+
+				//playLiveStream();
 			}
 		});
 		
-		btnStreamStop.setOnClickListener(new OnClickListener() {
+		liveStream.setOnClickListener(new OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				stopLiveStream();
+				String mStreamURL = "http://www.spywaredrguide.com/VirtualDr/files/Here_and_Now.mp3";
+				playCurrentSong4Cloud(mStreamURL);
 			}
 		});
 		
-		btnAudioStream.setOnClickListener(new OnClickListener() {
+		stopStream.setOnClickListener(new OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				playLiveStream();
+				pauseLiveStream();
 			}
 		});
 
@@ -408,19 +413,20 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				// loginOnFB();
-				callPlayList();
+				//stopLiveStream();
 			}
 		});
 
 		loginButton.setPublishPermissions(Arrays.asList("basic_info",
 				"publish_actions"));
-		
+
 		loginButton
 				.setUserInfoChangedCallback(new LoginButton.UserInfoChangedCallback() {
 					@Override
 					public void onUserInfoFetched(GraphUser user) {
 
 						muser = user;
+						Log.i("hemant", "muser in button " + muser);
 						updateUI();
 						// It's possible that we were waiting for this.user to
 						// be populated in order to post a
@@ -430,7 +436,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 
 				});
 
-		
+
 	}
 
 	// Go to previous Song from current one
@@ -528,12 +534,9 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			ProxyService.getInstance().playingAudio = false;
 			pauseCurrentSong();
 		} else {
-			try{
 			ProxyService.getInstance().playingAudio = true;
 			playCurrentSong();
-			}catch(Exception e){
-				
-			}
+
 		}
 	}
 
@@ -542,9 +545,9 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 			Log.i("SoundCloud", "" + "Stopping");
 			mp.stop();
 			mp.reset();
-			///syncPlayer = null;
+			syncPlayer = null;
 		}
-		
+
 		if (syncPlayer == null) {
 
 			try {
@@ -560,14 +563,6 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 					e.printStackTrace();
 				}
 				syncPlayer.prepare();
-				_activity.runOnUiThread(new Runnable() {
-					
-					@Override
-					public void run() {
-						// TODO Auto-generated method stub
-						btnPlay.setImageResource(R.drawable.btn_pause);
-					}
-				});
 			} catch (IllegalStateException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -580,22 +575,24 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		// Log.i("Music Player Start", "After perform Interaction");
 		syncPlayer.start();
 	}
-	
+
 	public void playCurrentSong4Cloud(String mStreamURL) {
 		if (syncPlayer != null && syncPlayer.isPlaying()) {
 			Log.i("SoundCloud", "" + "Stopping");
 			syncPlayer.stop();
 			syncPlayer.reset();
-			///syncPlayer = null;
+			syncPlayer = null;
 		}
 		Log.i("SoundCloud", "" + "Reset");
-		//if(syncPlayer == null){
+		if(syncPlayer == null){
+
+		MediaPlayer sdrPlayer = new MediaPlayer();
 
 		  try {
 			  mp.setDataSource(this, Uri.parse(mStreamURL));
 			  mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
 			  mp.prepare(); // don't use prepareAsync for mp3 playback
-			  
+
 			  ProxyService.getProxyInstance().show("Tracks", "4m Clouds", TextAlignment.CENTERED, ProxyService.getInstance().nextCorrID());
 		  } catch (IOException e) {
 		   // TODO Auto-generated catch block
@@ -606,9 +603,9 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		}
 
 		  syncPlayer.start();
-		
+
 		Log.i("SoundCloud", "EOC");
-		//}
+		}
 	}
 
 	public void pauseCurrentSong() {
@@ -621,12 +618,12 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		// Capturing the current song number
 		// setCurrentPlayingSongIndex(songIndex);
 		// Play song
-		if (mp != null && mp.isPlaying()) {
-			Log.i("Internet radio", "" + "Stopping");
-			mp.stop();
-			mp.reset();
-		}
-		
+//		if (mp != null && mp.isPlaying()) {
+//			Log.i("Internet radio", "" + "Stopping");
+//			mp.stop();
+//			mp.reset();
+//		}
+
 		if (songsList.size() > -1) {
 			try {
 				syncPlayer.reset();
@@ -640,15 +637,8 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 				ProxyService.getProxyInstance().show("Track No- :" + songIndex,
 						songTitle, TextAlignment.LEFT_ALIGNED,
 						ProxyService.getInstance().nextCorrID());
-				
-				_activity.runOnUiThread(new Runnable() {
-					
-					@Override
-					public void run() {
-						// TODO Auto-generated method stub
-						btnPlay.setImageResource(R.drawable.btn_pause);
-					}
-				});
+				btnPlay.setImageResource(R.drawable.btn_pause);
+
 				songProgressBar.setProgress(0);
 				songProgressBar.setMax(100);
 			} catch (IllegalArgumentException e) {
@@ -711,7 +701,7 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	public void onCompletion(MediaPlayer arg0) {
 		// TODO Auto-generated method stub
 		// check for repeat is ON or OFF
-		
+
 		if (isRepeat) {
 			// repeat is on play same song again
 			playCurrentSong(currentSongIndex);
@@ -775,6 +765,20 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		return _activity;
 	}
 
+	/** Displays the current protocol properties in the activity's title. */
+	private void showPropertiesInTitle() {
+		final SharedPreferences prefs = getSharedPreferences(Const.PREFS_NAME,
+				0);
+		boolean isMedia = prefs.getBoolean(Const.PREFS_KEY_ISMEDIAAPP,
+				Const.PREFS_DEFAULT_ISMEDIAAPP);
+		String transportType = prefs.getInt(
+				Const.Transport.PREFS_KEY_TRANSPORT_TYPE,
+				Const.Transport.PREFS_DEFAULT_TRANSPORT_TYPE) == Const.Transport.KEY_TCP ? "WiFi"
+				: "BT";
+		setTitle(getResources().getString(R.string.app_name) + " ("
+				+ (isMedia ? "" : "non-") + "media, " + transportType + ")");
+	}
+
 	// upon onDestroy(), dispose current proxy and create a new one to enable
 	// auto-start
 	// call resetProxy() to do so
@@ -795,6 +799,119 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 				serviceInstance.startProxy();
 			}
 		}
+	}
+
+	/**
+	 * Shows a dialog where the user can select connection features (protocol
+	 * version, media flag, app name, language, HMI language, and transport
+	 * settings). Starts the proxy after selecting.
+	 */
+	private void propertiesUI() {
+		Context context = this;
+		LayoutInflater inflater = (LayoutInflater) context
+				.getSystemService(LAYOUT_INFLATER_SERVICE);
+		View view = inflater.inflate(R.layout.properties,
+				(ViewGroup) findViewById(R.id.properties_Root));
+
+		final CheckBox mediaCheckBox = (CheckBox) view
+				.findViewById(R.id.properties_checkMedia);
+		final EditText appNameEditText = (EditText) view
+				.findViewById(R.id.properties_appName);
+		final RadioGroup transportGroup = (RadioGroup) view
+				.findViewById(R.id.properties_radioGroupTransport);
+		final EditText ipAddressEditText = (EditText) view
+				.findViewById(R.id.properties_ipAddr);
+		final EditText tcpPortEditText = (EditText) view
+				.findViewById(R.id.properties_tcpPort);
+		final CheckBox autoReconnectCheckBox = (CheckBox) view
+				.findViewById(R.id.properties_checkAutoReconnect);
+
+		ipAddressEditText.setEnabled(false);
+		tcpPortEditText.setEnabled(false);
+		autoReconnectCheckBox.setEnabled(false);
+
+		transportGroup
+				.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+					@Override
+					public void onCheckedChanged(RadioGroup group, int checkedId) {
+						boolean transportOptionsEnabled = checkedId == R.id.properties_radioWiFi;
+						ipAddressEditText.setEnabled(transportOptionsEnabled);
+						tcpPortEditText.setEnabled(transportOptionsEnabled);
+						autoReconnectCheckBox
+								.setEnabled(transportOptionsEnabled);
+					}
+				});
+
+		// display current configs
+		final SharedPreferences prefs = getSharedPreferences(Const.PREFS_NAME,
+				0);
+		boolean isMedia = prefs.getBoolean(Const.PREFS_KEY_ISMEDIAAPP,
+				Const.PREFS_DEFAULT_ISMEDIAAPP);
+		String appName = prefs.getString(Const.PREFS_KEY_APPNAME,
+				Const.PREFS_DEFAULT_APPNAME);
+		int transportType = prefs.getInt(
+				Const.Transport.PREFS_KEY_TRANSPORT_TYPE,
+				Const.Transport.PREFS_DEFAULT_TRANSPORT_TYPE);
+		String ipAddress = prefs.getString(
+				Const.Transport.PREFS_KEY_TRANSPORT_IP,
+				Const.Transport.PREFS_DEFAULT_TRANSPORT_IP);
+		int tcpPort = prefs.getInt(Const.Transport.PREFS_KEY_TRANSPORT_PORT,
+				Const.Transport.PREFS_DEFAULT_TRANSPORT_PORT);
+		boolean autoReconnect = prefs.getBoolean(
+				Const.Transport.PREFS_KEY_TRANSPORT_RECONNECT,
+				Const.Transport.PREFS_DEFAULT_TRANSPORT_RECONNECT_DEFAULT);
+
+		mediaCheckBox.setChecked(isMedia);
+		appNameEditText.setText(appName);
+		transportGroup
+				.check(transportType == Const.Transport.KEY_TCP ? R.id.properties_radioWiFi
+						: R.id.properties_radioBT);
+		ipAddressEditText.setText(ipAddress);
+		tcpPortEditText.setText(String.valueOf(tcpPort));
+		autoReconnectCheckBox.setChecked(autoReconnect);
+
+		new AlertDialog.Builder(context).setTitle("Please select properties")
+				.setCancelable(false)
+				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+
+						String appName = appNameEditText.getText().toString();
+						boolean isMedia = mediaCheckBox.isChecked();
+						int transportType = transportGroup
+								.getCheckedRadioButtonId() == R.id.properties_radioWiFi ? Const.Transport.KEY_TCP
+								: Const.Transport.KEY_BLUETOOTH;
+						String ipAddress = ipAddressEditText.getText()
+								.toString();
+						int tcpPort = Integer.parseInt(tcpPortEditText
+								.getText().toString());
+						boolean autoReconnect = autoReconnectCheckBox
+								.isChecked();
+
+						// save the configs
+						boolean success = prefs
+								.edit()
+								.putBoolean(Const.PREFS_KEY_ISMEDIAAPP, isMedia)
+								.putString(Const.PREFS_KEY_APPNAME, appName)
+								.putInt(Const.Transport.PREFS_KEY_TRANSPORT_TYPE,
+										transportType)
+								.putString(
+										Const.Transport.PREFS_KEY_TRANSPORT_IP,
+										ipAddress)
+								.putInt(Const.Transport.PREFS_KEY_TRANSPORT_PORT,
+										tcpPort)
+								.putBoolean(
+										Const.Transport.PREFS_KEY_TRANSPORT_RECONNECT,
+										autoReconnect).commit();
+						if (!success) {
+							// Log.w(logTag, "Can't save properties");
+						}
+
+						showPropertiesInTitle();
+
+						startSyncProxy();
+					}
+				}).setView(view).show();
 	}
 
 	/** Starts the sync proxy at startup after selecting protocol features. */
@@ -941,9 +1058,13 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		switch (previouslyPendingAction) {
 		case POST_PHOTO:
 			// postPhoto();
+			Log.d("hemant", "post photo");
+
 			break;
 		case POST_STATUS_UPDATE:
 			postStatusUpdate();
+			Log.d("hemant", "post status update");
+
 			break;
 		}
 	}
@@ -1061,11 +1182,6 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		uiHelper.onActivityResult(requestCode, resultCode, data, dialogCallback);
-		if(resultCode == 100){
-            currentSongIndex = data.getExtras().getInt("songIndex");
-            // play selected song
-            playCurrentSong(currentSongIndex);
-       }
 	}
 
 	@Override
@@ -1074,38 +1190,38 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		uiHelper.onPause();
 	}
 
-	public void playLiveStream(){
-		if (syncPlayer != null && syncPlayer.isPlaying()) {
-			Log.i("SoundCloud", "" + "Stopping");
-			syncPlayer.stop();
-			syncPlayer.reset();
-			///syncPlayer = null;
-		}
-		
-		
-		Uri myUri = Uri.parse("http://fr3.ah.fm:9000/");
-		try {
-			if (mp == null) {
-				this.mp = new MediaPlayer();
-			} else {
-				mp.stop();
-				mp.reset();
-			}
-			mp.setDataSource(this, myUri); // Go to Initialized state
-			mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
-			mp.setOnPreparedListener(this);
-			mp.setOnBufferingUpdateListener(this);
-
-			mp.setOnErrorListener(this);
-			mp.prepareAsync();
-			
-			ProxyService.getProxyInstance().show("Afterhours", "Internet Radio", TextAlignment.CENTERED, ProxyService.getInstance().nextCorrID());
-
-			Log.d("SyncMusicPlayer", "LoadClip Done");
-		} catch (Throwable t) {
-			Log.d("SyncMusicPlayer", t.toString());
-		}
-	}
+//	public void playLiveStream(){
+//		if (syncPlayer != null && syncPlayer.isPlaying()) {
+//			Log.i("SoundCloud", "" + "Stopping");
+//			syncPlayer.stop();
+//			syncPlayer.reset();
+//			///syncPlayer = null;
+//		}
+//
+//
+//		Uri myUri = Uri.parse("http://fr3.ah.fm:9000/");
+//		try {
+//			if (mp == null) {
+//				this.mp = new MediaPlayer();
+//			} else {
+//				mp.stop();
+//				mp.reset();
+//			}
+//			mp.setDataSource(this, myUri); // Go to Initialized state
+//			mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//			mp.setOnPreparedListener(this);
+//			mp.setOnBufferingUpdateListener(this);
+//
+//			mp.setOnErrorListener(this);
+//			mp.prepareAsync();
+//
+//			ProxyService.getProxyInstance().show("Afterhours", "Internet Radio", TextAlignment.CENTERED, ProxyService.getInstance().nextCorrID());
+//
+//			Log.d("SyncMusicPlayer", "LoadClip Done");
+//		} catch (Throwable t) {
+//			Log.d("SyncMusicPlayer", t.toString());
+//		}
+//	}
 
 	@Override
 	public boolean onError(MediaPlayer mp, int what, int extra) {
@@ -1145,27 +1261,12 @@ public class SyncMainActivity extends Activity implements OnCompletionListener,
 		Log.d("SyncMusicPlayer", "Stream is prepared");
 		mp.start();
 	}
-	
-	public void stopLiveStream(){
-		
-		if(mp != null && mp.isPlaying()){
-			try{
-			mp.stop();
-			mp.release();
-			}catch(Exception e){
-				
-			}
-		} else{
-		Toast.makeText(_activity, "No Streaming", Toast.LENGTH_SHORT).show();
-		}
-	}
-	
+
+//	public void stopLiveStream(){
+//		mp.stop();
+//	}
+
 	public void pauseLiveStream(){
 		mp.pause();
-	}
-	
-	public void callPlayList(){
-		Intent i = new Intent(getApplicationContext(), PlayListActivity.class);
-        startActivityForResult(i, 100);
 	}
 }

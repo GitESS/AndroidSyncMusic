@@ -108,11 +108,11 @@ public class LockScreenActivity extends Activity {
 	}
 
 	public void exit() {
-//		SyncMainActivity.getInstance().finish();
-//		if (isMyServiceRunning()) {
-//			Intent i = new Intent(LockScreenActivity.this, ProxyService.class);
-//			stopService(i);
-//		}
+		SyncMainActivity.getInstance().finish();
+		if (isMyServiceRunning()) {
+			Intent i = new Intent(LockScreenActivity.this, ProxyService.class);
+			stopService(i);
+		}
 		if(SyncMainActivity.getInstance()==null){
 			exitApp();
 		}
